@@ -58,12 +58,8 @@ export function saveData<D extends ModelSchema>(table: TableNames, data: D) {
 export function deleteData<D extends ModelSchema>(table: TableNames, id: string) {
     try {
         const data = JSON.parse(readJSON(table)) as D[];
-        const instance = data.find(item => item.id === id);
         const updatedList = data.filter(item => !(item.id === id));
-        if (instance.teamId) {
-            const reRankList = reRank(updatedList, instance.teamId);
-            console.log(reRankList);
-        }
+        writeJSON(table, updatedList);
     } catch (err) {
         throw new Error(err);
     }
@@ -109,14 +105,14 @@ const writeJSON = (table: string, json: any) => {
 }
 
 
-const reRank = (list: any[], teamId: string) => {
+const reRank = (list:  any[], teamId: string) => {
     const teamFilter = list.filter(item => item.teamId === teamId);
 
     let max = 1;
 
     const reRankList = teamFilter.map((item) => {
-        if (item.rankInTeam >= max) {
-            if (item.rankInTeam > max + 1) {
+        if(item.rankInTeam >= max) {
+            if(item.rankInTeam > max + 1) {
                 item.rankInTeam -= 1;
             }
             max = item.rankInTeam;
