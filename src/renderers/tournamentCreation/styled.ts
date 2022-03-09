@@ -14,6 +14,10 @@ export const TournamentForm = styled.div`
 
         .field-input {
             flex-grow: 1;
+
+            .ant-select {
+                width: 100%;
+            }
         }
     }
 

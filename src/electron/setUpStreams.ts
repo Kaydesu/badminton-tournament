@@ -1,6 +1,7 @@
 import { IPCMainStream } from "@classes/IPCStream";
 import { AthleteSchema } from "@data/Athlete";
 import { TeamSchema } from "@data/Team";
+import { TournamentSchema } from "@data/Tournament";
 import { batchUpdate, deleteData, fetchAll, fetchBatch, fetchOne, saveData } from "@utils/helpers";
 import { IPCResponse, TableNames } from "@utils/types";
 import { IpcMainEvent, IpcRenderer, IpcRendererEvent, WebContents } from "electron";
@@ -139,9 +140,12 @@ const setUpDeleteStream = <T>(tableName: TableNames) => {
 
 export const setUpFetchTeam = () => {
     setUpFetchStream<TeamSchema | TeamSchema[]>('TEAMS');
+    setUpFetchStream<TournamentSchema | TournamentSchema[]>('TOURNAMENTS');
     setUpSaveStream<TeamSchema>('TEAMS');
     setUpSaveStream<AthleteSchema>('ATHLETES');
+    setUpSaveStream<TournamentSchema>('TOURNAMENTS');
     setUpFetchBatchStream<AthleteSchema>('ATHLETES');
+    setUpFetchBatchStream<AthleteSchema>('TEAMS');
     setUpDeleteStream<AthleteSchema>('ATHLETES');
     setUpSaveBatchStream<AthleteSchema>('ATHLETES');
 }

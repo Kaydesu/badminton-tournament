@@ -1,56 +1,59 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { TournamentSummary, WINDOW_NAME } from '@utils/types';
 import Button from '@components/Button';
-import { EmptyView, TournamentGrid, TournamentItem, TournamentSummaryLayout } from './styled';
+import { EmptyView, TournamentTable, TournamentItem, TournamentSummaryLayout } from './styled';
 import Icon from '@components/Icon';
 import addCircle from '../../../../assets/icons/add-circle.svg';
-
+import { TeamSchema } from '@data/Team';
 
 type Props = {
     tournaments: TournamentSummary[];
 }
 
 const { openWindow } = window.Controller;
+const { fetch } = window.Api;
 
 const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
-    return tournaments.length > 0 ?
+
+    const [tournamentInfo, setTournamentInfo] = useState<TournamentSummary[]>([]);
+
+    useEffect(() => {
+        const hostIds = tournaments.map(item => item.host);
+
+        Promise.all(hostIds.map((id) => fetch<TeamSchema>('TEAMS', id))).then(teams => {
+            setTournamentInfo(tournaments.map((item, i) => ({
+                ...item,
+                host: teams[i].teamName
+            })));
+        })
+
+    }, [tournaments]);
+
+    return tournamentInfo.length > 0 ?
         (
             <TournamentSummaryLayout>
                 <div className="layout-header">
-                    <h2>Giải đấu đã tạo</h2>
+                    <h2>Giải đấu</h2>
                     <div onClick={() => openWindow(WINDOW_NAME.CREATE_TOURNAMENT)}><Icon src={addCircle} /></div>
                 </div>
-                <TournamentGrid className='tambo-scrollbar'>
+                <TournamentTable className='tambo-scrollbar'>
                     <div className='grid-container'>
+                        <div className="headers">
+                            <span>Tên giải</span>
+                            <span>Chủ nhà</span>
+                            <span>Vận động viên</span>
+                        </div>
                         {
-                            tournaments.map(item => (
-                                <TournamentItem key={item.id}>
-                                    <h2 className='tournament-title'>
-                                        {item.name}
-                                    </h2>
-                                    <div className="tournament-info">
-                                        <div className="tournament-info--row">
-                                            <span className="label">Ban tổ chức</span>
-                                            <span className="value">{item.host}</span>
-                                        </div>
-                                        <div className="tournament-info--row">
-                                            <span className="label">Vận động viên</span>
-                                            <span className="value">{item.participants}</span>
-                                        </div>
-                                        <div className="tournament-info--row">
-                                            <span className="label">Lứa tuổi</span>
-                                            <span className="value">U-{item.age}</span>
-                                        </div>
-                                    </div>
-                                    <div className="tourmament-status">
-                                        <span className="label">Trạng thái</span>
-                                        <span className="value">{item.status}</span>
-                                    </div>
+                            tournamentInfo.map(item => (
+                                <TournamentItem to={`/tournament/${item.id}`} key={item.id}>
+                                    <span>{item.name}</span>
+                                    <span>{item.host}</span>
+                                    <span>{item.participants}</span>
                                 </TournamentItem>
                             ))
                         }
                     </div>
-                </TournamentGrid>
+                </TournamentTable>
             </TournamentSummaryLayout>
         )
         : (

@@ -7,6 +7,10 @@ export const controller = {
     openWindow(windowName: WINDOW_NAME) {
         ipcRenderer.send("openWindow", windowName);
     },
+
+    closeWindow(windowName: WINDOW_NAME) {
+        ipcRenderer.send("closeWindow", windowName);
+    }
 }
 
 export const api = {
@@ -14,7 +18,20 @@ export const api = {
         const eventName = `fetch:${table}`;
         ipcRenderer.send(eventName, id);
         return new Promise((resolve, reject) => {
-            ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<T>) => {
+            ipcRenderer.once(`${eventName}/response`, (event, response: IPCResponse<T>) => {
+                if (response.status === 'error') {
+                    reject();
+                } else {
+                    resolve(response.data);
+                }
+            })
+        })
+    },
+    fetchConsecutive<T>(table: TableNames, id: string = ''): Promise<T> {
+        const eventName = `fetch:${table}`;
+        ipcRenderer.send(eventName, id);
+        return new Promise((resolve, reject) => {
+            ipcRenderer.once(`${eventName}/response`, (event, response: IPCResponse<T>) => {
                 if (response.status === 'error') {
                     reject();
                 } else {
@@ -27,7 +44,7 @@ export const api = {
         const eventName = `save:${table}`;
         ipcRenderer.send(eventName, data);
         return new Promise((resolve, reject) => {
-            ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<T>) => {
+            ipcRenderer.once(`${eventName}/response`, (event, response: IPCResponse<T>) => {
                 if (response.status === 'error') {
                     reject();
                 } else {
@@ -40,7 +57,7 @@ export const api = {
         const eventName = `delete:${table}`;
         ipcRenderer.send(eventName, id);
         return new Promise((resolve, reject) => {
-            ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<T>) => {
+            ipcRenderer.once(`${eventName}/response`, (event, response: IPCResponse<T>) => {
                 if (response.status === 'error') {
                     reject();
                 } else {
@@ -53,7 +70,7 @@ export const api = {
         const eventName = `fetchBatch:${table}`;
         ipcRenderer.send(eventName, listId);
         return new Promise((resolve, reject) => {
-            ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<T[]>) => {
+            ipcRenderer.once(`${eventName}/response`, (event, response: IPCResponse<T[]>) => {
                 if (response.status === 'error') {
                     reject();
                 } else {
@@ -66,7 +83,7 @@ export const api = {
         const eventName = `saveBatch:${table}`;
         ipcRenderer.send(eventName, data);
         return new Promise((resolve, reject) => {
-            ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<T[]>) => {
+            ipcRenderer.once(`${eventName}/response`, (event, response: IPCResponse<T[]>) => {
                 if (response.status === 'error') {
                     reject();
                 } else {

@@ -16,7 +16,6 @@ export interface TournamentSummary {
     age: number;
     host: string;
     participants: number;
-    status: TOURNAMENT_STATUS;
 }
 
 export type Sex = 'MALE' | 'FEMALE';

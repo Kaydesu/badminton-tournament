@@ -65,6 +65,14 @@ class WindowManager {
         this._appWindows.get(name).loadURL(ENTRIES[name].webpack);
         this._appWindows.get(name).webContents.openDevTools();
     }
+
+    getWindow(name: WINDOW_NAME) {
+        return this._appWindows.get(name);
+    }
+
+    getMainWindow() {
+        return this._mainWindow;
+    }
 }
 
 export default new WindowManager();

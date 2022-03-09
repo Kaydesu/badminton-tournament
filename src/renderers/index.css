@@ -41,3 +41,8 @@ ul, li {
     background-color: #4B4B4B;
     opacity: 0.5;
 }
+
+a {
+    color: #4B4B4B !important;
+    text-decoration: none !important;
+}

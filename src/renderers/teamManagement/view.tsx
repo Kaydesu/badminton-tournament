@@ -91,8 +91,8 @@ const View = () => {
     }
 
     const arrangeMember = (index: number, direction: 'up' | 'down') => {
-        const updatedTeam = {...currentTeam} as TeamSchema;
-        if(direction === 'up') {
+        const updatedTeam = { ...currentTeam } as TeamSchema;
+        if (direction === 'up') {
             updatedTeam.members.splice(index - 1, 0, updatedTeam.members.splice(index, 1)[0]);
         } else {
             updatedTeam.members.splice(index + 1, 0, updatedTeam.members.splice(index, 1)[0]);

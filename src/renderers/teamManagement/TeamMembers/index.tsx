@@ -26,12 +26,14 @@ const initialAtheleteInfo: AthleteSchema = {
 
 const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMember }) => {
 
-    const [registerView, setRegisterView] = useState(members.length !== 0);
+    const [registerView, setRegisterView] = useState(members.length === 0);
     const [currentMember, setCurrentMember] = useState<AthleteSchema>(initialAtheleteInfo);
     const [teamMembers, setTeamMembers] = useState<AthleteSchema[]>([]);
 
     useEffect(() => {
         getMemberInfo();
+        setRegisterView(members.length === 0);
+        setCurrentMember(initialAtheleteInfo);
     }, [members]);
 
     const getMemberInfo = () => {
@@ -103,13 +105,14 @@ const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMembe
                     onSave={handleSave}
                 />
             }
-
-            <TeamList
-                onRemoveMember={removeMember}
-                onShowInfo={onShowInfo}
-                onArange={arrangeMember}
-                data={teamMembers}
-            />
+            {
+                teamMembers.length > 0 && <TeamList
+                    onRemoveMember={removeMember}
+                    onShowInfo={onShowInfo}
+                    onArange={arrangeMember}
+                    data={teamMembers}
+                />
+            }
         </TeamMemberLayout>
     )
 }
