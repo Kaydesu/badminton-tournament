@@ -140,13 +140,16 @@ const setUpDeleteStream = <T>(tableName: TableNames) => {
 
 export const setUpFetchTeam = () => {
     setUpFetchStream<TeamSchema | TeamSchema[]>('TEAMS');
-    setUpFetchStream<TournamentSchema | TournamentSchema[]>('TOURNAMENTS');
     setUpSaveStream<TeamSchema>('TEAMS');
-    setUpSaveStream<AthleteSchema>('ATHLETES');
-    setUpSaveStream<TournamentSchema>('TOURNAMENTS');
-    setUpFetchBatchStream<AthleteSchema>('ATHLETES');
     setUpFetchBatchStream<AthleteSchema>('TEAMS');
+
+    setUpFetchStream<AthleteSchema | AthleteSchema[]>('ATHLETES');
+    setUpSaveStream<AthleteSchema>('ATHLETES');
     setUpDeleteStream<AthleteSchema>('ATHLETES');
+    setUpFetchBatchStream<AthleteSchema>('ATHLETES');
     setUpSaveBatchStream<AthleteSchema>('ATHLETES');
+
+    setUpFetchStream<TournamentSchema | TournamentSchema[]>('TOURNAMENTS');
+    setUpSaveStream<TournamentSchema>('TOURNAMENTS');
 }
 

@@ -1,94 +1,111 @@
-import React from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { TableStyle, TableTabs } from './styled';
 import trashIcon from '../../../../assets/icons/trash.svg';
 import arrowUp from '../../../../assets/icons/arrow-up.svg';
 import Icon from '@components/Icon';
+import { CompeteTeam } from '@data/Tournament';
 
-
-const arrray = new Array(50).fill(null);
 
 const columns = [
     {
         title: 'Tên',
+        dataIndex: 'name',
     },
     {
         title: 'Đội',
+        dataIndex: 'team',
     },
     {
         title: 'Sđt',
+        dataIndex: 'phone',
     },
     {
         title: 'Mail',
+        dataIndex: 'mail',
     },
     {
         title: 'Hạng trong đội',
+        dataIndex: 'rankInTeam',
     },
-    {
-        title: '',
-    }
 ]
 
-const ParticipantList = () => {
+type Props = {
+    competeTeams: CompeteTeam[];
+}
+
+const ParticipantList: FC<Props> = ({ competeTeams }) => {
+
+    const [currentTab, setCurrentTab] = useState('all');
+
+    const rowData = useMemo(() => {
+        const participants: {
+            name: string;
+            team: string;
+            phone: string;
+            mail: string;
+            rankInTeam: number;
+        }[] = [];
+
+        competeTeams.map((team) => {
+            team.members.map((member, i) => {
+                participants.push({
+                    name: member.name,
+                    team: team.name,
+                    phone: member.phone,
+                    mail: member.email,
+                    rankInTeam: i + 1,
+                })
+            })
+        });
+
+        console.log(participants);
+
+        return participants.map((member: any, index) => (
+            <tr key={member.name + index}>
+                {
+                    columns.map((col, i) => (
+                        <td key={`${member[col.dataIndex]}-${i}-${index}`}>
+                            <div>{member[col.dataIndex]}</div>
+                        </td>
+                    ))
+                }
+                <td><div className='action'><Icon src={trashIcon} /></div></td>
+            </tr>
+        ))
+    }, [competeTeams]);
+
     return (
         <>
             <TableTabs>
-                <div className="tab-item active">
+                <div className={`tab-item ${currentTab === 'all' ? 'active' : ''}`}>
                     Tất cả
-                </div>
-                <div className="tab-item">
-                    Tambo
-                </div>
-                <div className="tab-item">
-                    Hoàng Long
-                </div>
-                <div className="tab-item">
-                    Cặc
                 </div>
             </TableTabs>
             <TableStyle>
                 <table className='table-header'>
                     <colgroup>
-                        <col span={5} width={150} />
+                        <col span={5} width={180} />
                         <col width={'auto'} />
                     </colgroup>
                     <thead>
-                        {
-                            columns.map((item, idx) => (
-                                <th key={idx}>
-                                    {item.title}
-                                </th>
-                            ))
-                        }
+                        <tr>
+                            {
+                                columns.map((item, index) => (
+                                    <th key={item.title + index}>
+                                        {item.title}
+                                    </th>
+                                ))
+                            }
+                            <th></th>
+                        </tr>
                     </thead>
                 </table>
                 <div className='table-body-container tambo-scrollbar'>
                     <table>
                         <colgroup>
-                            <col span={5} width={150} />
+                            <col span={5} width={180} />
                         </colgroup>
-                        <tbody>
-                            {
-                                arrray.map((_, mainIndex) => (
-                                    <tr key={mainIndex}>
-                                        {
-                                            columns.map((_, idx) => (
-                                                <td key={idx}>
-                                                    {
-                                                        idx !== 5 ? <div>
-                                                            Chiêu Anh
-                                                        </div> : <div className='action'>
-                                                            {mainIndex > 0 && <Icon src={arrowUp} />}
-                                                            {mainIndex < arrray.length - 1 && <Icon src={arrowUp} className='down'/>}
-                                                            <Icon src={trashIcon} />
-                                                        </div>}
-
-                                                </td>
-                                            ))
-                                        }
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
+                        <tbody>{rowData}</tbody>
                     </table>
                 </div>
             </TableStyle>

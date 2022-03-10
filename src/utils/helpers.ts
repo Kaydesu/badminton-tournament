@@ -10,6 +10,7 @@ export function fetchOne<D extends ModelSchema>(id: string, table: TableNames): 
     try {
         const data = JSON.parse(readJSON(table)) as D[];
         const instance = data.find(item => item.id === id);
+        console.log(instance)
         return instance;
     } catch (err) {
         throw new Error(err);
@@ -21,6 +22,7 @@ export function fetchBatch<D extends ModelSchema>(table: TableNames, listId: str
     try {
         const data = JSON.parse(readJSON(table)) as D[];
         const batch = data.filter(item => listId.includes(item.id));
+        console.log(batch);
         return batch;
     } catch (err) {
         throw new Error(err);

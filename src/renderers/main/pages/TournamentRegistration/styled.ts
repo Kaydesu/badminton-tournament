@@ -28,11 +28,26 @@ export const SideBarItem = styled.button`
     display: flex;
     align-items: center;
     padding: 0 24px;
+    padding-right: 0;
     margin-bottom: 65px;
     cursor: pointer;
 
     &.active {
         background-color: #fff;
+    }
+    
+    .content-label {
+        display: flex;
+        flex-grow: 1;
+        align-items: center;
+        height: 100%
+    }
+
+    &:disabled {
+        .content-label {
+            opacity: 0.4;
+            pointer-events: none;
+        }
     }
 `
 
@@ -82,13 +97,27 @@ export const StatisticLayout = styled.div`
                 align-items: center;
                 justify-content: space-between;
                 margin-bottom: 28px;
+                
+                &--submit {
+                    justify-content: flex-end;
+                    .tambo-button {
+                        width: 125px;
+                        margin-left: 20px;
+                    }
+                }
+
                 &__label {
                     width: 125px;
                 }
                 &__input {
                     flex-grow: 1;
+                    position: relative;
                     .tambo-input__input {
+                        width: 100%;
                         padding: 5px 12px;
+                    }
+                    .ant-select {
+                        width: 100%;
                     }
                 }
 
@@ -104,6 +133,7 @@ export const StatisticLayout = styled.div`
                 &__label {
                     margin-right: 12px;
                 }
+                
             }
         }
     }
@@ -153,9 +183,13 @@ export const TableStyle = styled.div`
 
         tr {
             td {
+                padding: 8px 0 8px 30px;
                 div {
-                    padding: 5px 30px;
+                    width: calc(100% - 10px);
                     height: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                     &.action {
                         display: flex;
                         justify-content: flex-end;

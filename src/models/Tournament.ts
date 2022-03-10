@@ -1,6 +1,12 @@
+export interface CompeteMember {
+    name: string;
+    phone: string;
+    email: string;
+}
+
 export interface CompeteTeam {
     name: string;
-    members: string[];
+    members: CompeteMember[];
 }
 
 export interface CompetitionFormat {
@@ -18,4 +24,12 @@ export interface TournamentSchema {
     menDouble?: CompetitionFormat,
     womenDouble?: CompetitionFormat,
     mixedDouble?: CompetitionFormat,
+}
+
+export enum Content {
+    MAN_SINGLE = 'mainSingle',
+    MAN_DOUBLE = 'mainDouble',
+    WOMAN_SINGLE = 'womanSingle',
+    WOMAN_DOUBLE = 'womanDouble',
+    MIXED_DOUBLE = 'mixedDouble',
 }
