@@ -48,17 +48,27 @@ const ParticipantList: FC<Props> = ({ competeTeams }) => {
 
         competeTeams.map((team) => {
             team.members.map((member, i) => {
-                participants.push({
-                    name: member.name,
-                    team: team.name,
-                    phone: member.phone,
-                    mail: member.email,
-                    rankInTeam: i + 1,
-                })
+                if (currentTab === 'all') {
+                    participants.push({
+                        name: member.name,
+                        team: team.name,
+                        phone: member.phone,
+                        mail: member.email,
+                        rankInTeam: i + 1,
+                    });
+                } else {
+                    if (team.name === currentTab) {
+                        participants.push({
+                            name: member.name,
+                            team: team.name,
+                            phone: member.phone,
+                            mail: member.email,
+                            rankInTeam: i + 1,
+                        });
+                    }
+                }
             })
         });
-
-        console.log(participants);
 
         return participants.map((member: any, index) => (
             <tr key={member.name + index}>
@@ -72,15 +82,35 @@ const ParticipantList: FC<Props> = ({ competeTeams }) => {
                 <td><div className='action'><Icon src={trashIcon} /></div></td>
             </tr>
         ))
-    }, [competeTeams]);
+    }, [competeTeams, currentTab]);
+
+    const tabs = useMemo(() => {
+        return (
+            <>
+                <div
+                    onClick={() => setCurrentTab('all')}
+                    className={`tab-item ${currentTab === 'all' ? 'active' : ''}`}
+                >
+                    Tất cả
+                </div>
+                {
+                    competeTeams.map((team, index) => (
+                        <div
+                            key={`${team}+${index}___tabs`}
+                            onClick={() => setCurrentTab(team.name)}
+                            className={`tab-item ${currentTab === team.name ? 'active' : ''}`}
+                        >
+                            {team.name}
+                        </div>
+                    ))
+                }
+            </>
+        )
+    }, [competeTeams, currentTab]);
 
     return (
         <>
-            <TableTabs>
-                <div className={`tab-item ${currentTab === 'all' ? 'active' : ''}`}>
-                    Tất cả
-                </div>
-            </TableTabs>
+            <TableTabs>{tabs}</TableTabs>
             <TableStyle>
                 <table className='table-header'>
                     <colgroup>
