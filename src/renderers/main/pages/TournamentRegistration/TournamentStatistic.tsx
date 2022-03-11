@@ -9,8 +9,9 @@ import { Select } from 'antd';
 import Button from '@components/Button';
 import { TeamSchema } from '@data/Team';
 import { AthleteSchema } from '@data/Athlete';
-import { Content, TournamentSchema } from '@data/Tournament';
+import { CompeteMember, Content, TournamentSchema } from '@data/Tournament';
 import { Sex } from '@utils/types';
+import { useToastAction } from '@components/Toast';
 
 interface TeamOptions {
     id: string;
@@ -36,23 +37,19 @@ const initialMember = {
 type Props = {
     activeContent: Content;
     tournament: TournamentSchema;
+    registerNewMember: (name: string, member: CompeteMember) => Promise<void>;
+    registerNewTeam: (name: string, member: CompeteMember) => Promise<void>;
 }
 
-const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
+const TournamentStatistic: FC<Props> = ({ activeContent, tournament, registerNewMember, registerNewTeam }) => {
+
+    const { setToastVisible, setToastContent } = useToastAction();
 
     const [teamList, setTeamList] = useState<TeamOptions[]>([]);
     const [memberList, setMemberList] = useState<AthleteSchema[]>([]);
 
     const [currentTeam, setCurrentTeam] = useState(initialTeam);
     const [currentMember, setCurrentMember] = useState(initialMember);
-
-    const [name, setName] = useState<{
-        id: string;
-        value: string;
-    }>({
-        id: '',
-        value: '',
-    });
 
     const [info, setInfo] = useState<{
         email: string;
@@ -71,7 +68,7 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
         if (currentTeam.id) {
             getMemberList();
         }
-    }, [currentTeam]);
+    }, [currentTeam.id]);
 
 
 
@@ -117,7 +114,7 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
             default:
                 return [];
         }
-    }, [tournament]);
+    }, [tournament, activeContent]);
 
     /*=================================Team related:==============================*/
     const handleSearchTeam = (e: string) => {
@@ -130,7 +127,7 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
         setCurrentTeam({
             ...currentTeam,
             name: value,
-        })
+        });
     }
 
     const handleSelectTeam = (id: string) => {
@@ -148,12 +145,27 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
         ))
     }, [teamList]);
     /*=================================Member related:==============================*/
-    const handleSearchName = (e: any) => {
-
+    const handleSearchMember = (e: string) => {
+        let value;
+        if (currentMember.name.length === 1 && e === '') {
+            value = '';
+        } else {
+            value = e === '' ? currentMember.name : e;
+        }
+        setCurrentMember({
+            ...currentMember,
+            name: value,
+        });
     }
 
-    const handleSelectName = (e: any) => {
-
+    const handleSelectMember = (id: string) => {
+        if (id !== '') {
+            const instance = memberList.find(item => item.id === id);
+            setCurrentMember({
+                id: instance.id,
+                name: instance.name,
+            });
+        }
     }
 
     const athleteOptions = useMemo(() => {
@@ -167,6 +179,50 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
             ))
         }
     }, [memberList]);
+
+
+    /** ===================================== Call API==================================== */
+
+    const register = () => {
+        const errors: string[] = [];
+        if (currentTeam.name === '' || currentMember.name === '') {
+            !currentTeam.name && errors.push('Không được bỏ trống tên đội')
+            !currentMember.name && errors.push('Không được bỏ trống tên vận động viên')
+            setToastVisible(true);
+            setToastContent(errors, 'error');
+            return;
+        }
+
+        // Check if the team exist in teamList
+        const team = competeTeams.find(item => item.name === currentTeam.name);
+        const newMember = {
+            name: currentMember.name,
+            phone: info.phone,
+            email: info.email,
+        }
+        if (team) {
+            const memberIndex = team.members.findIndex(member => member.name === newMember.name);
+            if (memberIndex > -1) {
+                setToastVisible(true);
+                setToastContent(['Thành viên đã đăng ký'], 'error');
+                return
+            }
+
+            registerNewMember(currentTeam.name, newMember).then(() => {
+                setToastVisible(true);
+                setToastContent(['Đăng ký thành công'], 'success');
+            })
+        } else {
+            registerNewTeam(currentTeam.name, newMember).then(() => {
+                setToastVisible(true);
+                setToastContent(['Đăng ký thành công'], 'success');
+            })
+        }
+    }
+
+    const clearAll = () => {
+
+    }
 
     return (
         <StatisticStyled>
@@ -191,7 +247,6 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
                         <div className="info-field">
                             <div className="info-field__label">Đội</div>
                             <div className="info-field__input">
-                                <input type="text" className='hidden-input' />
                                 <Select
                                     showSearch
                                     optionFilterProp='children'
@@ -210,8 +265,8 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
                                     showSearch
                                     optionFilterProp='children'
                                     searchValue={currentMember.name}
-                                    onSearch={handleSearchName}
-                                    onChange={handleSelectName}
+                                    onSearch={handleSearchMember}
+                                    onChange={handleSelectMember}
                                 >
                                     {athleteOptions}
                                 </Select>
@@ -223,10 +278,10 @@ const TournamentStatistic: FC<Props> = ({ activeContent, tournament }) => {
                         </div>
                         <div className="info-field">
                             <div className="info-field__label">Số điện thoại</div>
-                            <div className="info-field__input"><Input /></div>
+                            <div className="info-field__input"><Input type='number' /></div>
                         </div>
                         <div className="info-field info-field--submit">
-                            <Button>Đăng ký</Button>
+                            <Button onClick={register}>Đăng ký</Button>
                             <Button buttonType='secondary'>Xóa</Button>
                         </div>
                     </div>

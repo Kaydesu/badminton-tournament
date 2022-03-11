@@ -1,7 +1,7 @@
 export interface CompeteMember {
     name: string;
-    phone: string;
-    email: string;
+    phone?: string;
+    email?: string;
 }
 
 export interface CompeteTeam {

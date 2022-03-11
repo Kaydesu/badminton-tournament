@@ -83,47 +83,6 @@ const SideBar: FC<Props> = ({
                     </SideBarItem>
                 ))
             }
-            {/* <SideBarItem
-                onClick={() => changeActiveContent(Content.MAN_SINGLE)}
-                className={activeTab === Content.MAN_SINGLE ? 'active' : ''}
-                disabled={!tournament.menSingle.enabled}
-            >
-                <Radio checked={tournament.menSingle.enabled} name="menSingle" />
-                <span>Đơn nam</span>
-            </SideBarItem>
-            <SideBarItem
-                onClick={() => changeActiveContent(Content.WOMAN_SINGLE)}
-                className={activeTab === Content.WOMAN_SINGLE ? 'active' : ''}
-                disabled={!tournament.womenSingle.enabled}
-            >
-                <Radio />
-                <span>Đơn nữ</span>
-            </SideBarItem>
-            <SideBarItem
-                onClick={() => changeActiveContent(Content.MAN_DOUBLE)}
-                className={activeTab === Content.MAN_DOUBLE ? 'active' : ''}
-                disabled={!tournament.menDouble.enabled}
-            >
-                <Radio />
-                <span>Đôi nam</span>
-            </SideBarItem>
-            <SideBarItem
-                onClick={() => changeActiveContent(Content.WOMAN_DOUBLE)}
-                className={activeTab === Content.WOMAN_DOUBLE ? 'active' : ''}
-                disabled={!tournament.womenDouble.enabled}
-            >
-                <Radio />
-                <span>Đôi nữ</span>
-            </SideBarItem>
-            <SideBarItem
-                onClick={() => changeActiveContent(Content.MIXED_DOUBLE)}
-                className={activeTab === Content.MIXED_DOUBLE ? 'active' : ''}
-                disabled={!tournament.mixedDouble.enabled}
-
-            >
-                <Radio />
-                <span>Đôi nam/nữ</span>
-            </SideBarItem> */}
         </SideBarStyled>
     )
 }

@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { Content, TournamentSchema } from '@data/Tournament';
+import { CompeteMember, CompeteTeam, Content, TournamentSchema } from '@data/Tournament';
 import { useParams } from 'react-router-dom'
 import SideBar from './SideBar';
 import { Container } from './styled';
@@ -55,8 +55,68 @@ const TournamentRegistration: FC = () => {
         updateTournament(newTournament);
     }
 
+    const getCompeteTeam = () => {
+        switch (activeContent) {
+            case Content.MAN_SINGLE:
+                return tournament.menSingle.teams;
+            case Content.WOMAN_SINGLE:
+                return tournament.womenSingle.teams;
+            case Content.MAN_DOUBLE:
+                return tournament.menDouble.teams;
+            case Content.WOMAN_DOUBLE:
+                return tournament.womenDouble.teams;
+            case Content.MIXED_DOUBLE:
+                return tournament.mixedDouble.teams;
+            default:
+                return [];
+        }
+    }
+
+    const setCompeteTeam = (teams: CompeteTeam[]) => {
+        const newTournament = { ...tournament };
+        switch (activeContent) {
+            case Content.MAN_SINGLE:
+                newTournament.menSingle.teams = teams;
+                break
+            case Content.WOMAN_SINGLE:
+                newTournament.womenSingle.teams = teams;
+                break
+            case Content.MAN_DOUBLE:
+                newTournament.menDouble.teams = teams;
+                break
+            case Content.WOMAN_DOUBLE:
+                newTournament.womenDouble.teams = teams;
+                break
+            case Content.MIXED_DOUBLE:
+                newTournament.mixedDouble.teams = teams;
+                break
+            default:
+                return newTournament;
+        }
+        return newTournament;
+    }
+
+    const registerNewMember = (name: string, member: CompeteMember) => {
+        const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
+        const team = temp.find(item => item.name === name);
+        team.members.push(member);
+        const newTournament = setCompeteTeam(temp);
+
+        return updateTournament(newTournament);
+    }
+    const registerNewTeam = (name: string, member: CompeteMember) => {
+        const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
+        temp.push({
+            name,
+            members: [member],
+        })
+        const newTournament = setCompeteTeam(temp);
+
+        return updateTournament(newTournament)
+    }
+
     const updateTournament = (data: TournamentSchema) => {
-        save<TournamentSchema>('TOURNAMENTS', data).then(value => {
+        return save<TournamentSchema>('TOURNAMENTS', data).then(value => {
             setTournament(value);
         });
     }
@@ -73,6 +133,8 @@ const TournamentRegistration: FC = () => {
                             handleActiveContent={handleActiveContent}
                         />
                         <TournamentStatistic
+                            registerNewTeam={registerNewTeam}
+                            registerNewMember={registerNewMember}
                             tournament={tournament}
                             activeContent={activeContent}
                         />
