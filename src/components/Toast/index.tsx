@@ -3,7 +3,7 @@ import Toast from './Toast';
 
 export type ToastState = {
     messages: string[];
-    type: 'error' | 'sucess' | 'info',
+    type: 'error' | 'success' | 'info',
     visible: boolean;
 }
 
@@ -15,7 +15,7 @@ type SetVisible = {
 type SetMessages = {
     type: 'SET_MESSAGES';
     payload: {
-        type: 'error' | 'sucess' | 'info';
+        type: 'error' | 'success' | 'info';
         messages: string[];
     };
 }
@@ -86,8 +86,7 @@ const setToastVisible = (dispatch: Dispatch<SetVisible>, visible: boolean) => {
         payload: visible,
     })
 }
-const setToastContent = (dispatch: Dispatch<SetMessages>, messages: string[], type: 'error' | 'sucess' | 'info') => {
-    console.log(messages);
+const setToastContent = (dispatch: Dispatch<SetMessages>, messages: string[], type: 'error' | 'success' | 'info') => {
     dispatch({
         type: 'SET_MESSAGES',
         payload: {

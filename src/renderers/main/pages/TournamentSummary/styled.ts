@@ -28,7 +28,7 @@ export const TournamentTable = styled.div`
 }
 `
 
-export const TournamentItem = styled(Link)`
+export const TournamentItem = styled.button`
     height: 50px;
     width: 100%;
     border-radius: 4px;

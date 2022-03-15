@@ -115,6 +115,42 @@ const TournamentRegistration: FC = () => {
         return updateTournament(newTournament)
     }
 
+    const deleteMember = (name: string, teamName: string) => {
+        const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
+        const team = temp.find(item => item.name === teamName);
+        const index = team.members.findIndex(member => member.name === name);
+        team.members.splice(index, 1);
+
+        if (team.members.length === 0) {
+            const teamIndex = temp.findIndex(item => item.name === teamName);
+            temp.splice(teamIndex, 1);
+            const newTournament = setCompeteTeam(temp);
+            updateTournament(newTournament);
+        } else {
+            const newTournament = setCompeteTeam(temp);
+            updateTournament(newTournament);
+        }
+    }
+
+    const updateRank = (name: string, teamName: string, dir: 'up' | 'down') => {
+        const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
+        const team = temp.find(item => item.name === teamName);
+        const member = team.members.find(item => item.name === name);
+        if(member.seedRank === 3 && dir === 'up') {
+            return;
+        }
+        if(member.seedRank === 0 && dir === 'down') {
+            return;
+        }
+        if (dir === 'up') {
+            member.seedRank += 0.5;
+        } else {
+            member.seedRank -= 0.5;
+        }
+        const newTournament = setCompeteTeam(temp);
+        updateTournament(newTournament);
+    }
+
     const updateTournament = (data: TournamentSchema) => {
         return save<TournamentSchema>('TOURNAMENTS', data).then(value => {
             setTournament(value);
@@ -133,6 +169,8 @@ const TournamentRegistration: FC = () => {
                             handleActiveContent={handleActiveContent}
                         />
                         <TournamentStatistic
+                            handleUpdateRank={updateRank}
+                            deleteMember={deleteMember}
                             registerNewTeam={registerNewTeam}
                             registerNewMember={registerNewMember}
                             tournament={tournament}

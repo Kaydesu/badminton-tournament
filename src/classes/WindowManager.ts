@@ -45,6 +45,10 @@ class WindowManager {
         this._mainWindow.webContents.openDevTools();
     }
 
+    goHome() {
+        this._mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+    }
+
     createWindow(name: WINDOW_NAME, config: BrowserWindowConstructorOptions) {
         this._appWindows.set(
             name,

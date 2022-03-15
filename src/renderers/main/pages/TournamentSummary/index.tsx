@@ -5,6 +5,7 @@ import { EmptyView, TournamentTable, TournamentItem, TournamentSummaryLayout } f
 import Icon from '@components/Icon';
 import addCircle from '../../../../assets/icons/add-circle.svg';
 import { TeamSchema } from '@data/Team';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
     tournaments: TournamentSummary[];
@@ -14,6 +15,8 @@ const { openWindow } = window.Controller;
 const { fetch } = window.Api;
 
 const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
+
+    const navigate = useNavigate();
 
     const [tournamentInfo, setTournamentInfo] = useState<TournamentSummary[]>([]);
 
@@ -45,7 +48,7 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
                         </div>
                         {
                             tournamentInfo.map(item => (
-                                <TournamentItem to={`/tournament/${item.id}`} key={item.id}>
+                                <TournamentItem onClick={() => navigate(`/tournament/${item.id}`)} key={item.id}>
                                     <span>{item.name}</span>
                                     <span>{item.host}</span>
                                     <span>{item.participants}</span>

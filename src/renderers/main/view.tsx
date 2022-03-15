@@ -5,6 +5,7 @@ import TournamentSummaryPage from './pages/TournamentSummary';
 import { AppLayout } from './styled';
 import { TournamentSchema } from '@data/Tournament';
 import TournamentRegistration from './pages/TournamentRegistration';
+import TournamentMatch from './pages/TournamentMatch';
 
 const { fetchConsecutive, fetch } = window.Api;
 
@@ -54,6 +55,7 @@ const View = () => {
                 <Routes>
                     <Route path='/' element={<TournamentSummaryPage tournaments={tournaments} />} />
                     <Route path='/tournament/:id' element={<TournamentRegistration />} />
+                    <Route path='/tournament/match/:id' element={<TournamentMatch />} />
                 </Routes>
             </Router>
         </AppLayout >

@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import { Radio, RadioChangeEvent } from 'antd'
 import { SideBarItem, SideBarStyled } from './styled'
 import { Content, TournamentSchema } from '@data/Tournament'
+import { contentList } from '@utils/constants'
 
 type Props = {
     tournament: TournamentSchema;
@@ -9,34 +10,6 @@ type Props = {
     changeActiveContent: (contentType: Content) => void;
     handleActiveContent: (name: string, checked: boolean) => void;
 }
-
-const contentList = [
-    {
-        key: 'menSingle',
-        content: Content.MAN_SINGLE,
-        label: 'Đơn nam'
-    },
-    {
-        key: 'womenSingle',
-        content: Content.WOMAN_SINGLE,
-        label: 'Đơn nữ'
-    },
-    {
-        key: 'menDouble',
-        content: Content.MAN_DOUBLE,
-        label: 'Đôi nam'
-    },
-    {
-        key: 'womenDouble',
-        content: Content.WOMAN_DOUBLE,
-        label: 'Đôi nữ'
-    },
-    {
-        key: 'mixedDouble',
-        content: Content.MIXED_DOUBLE,
-        label: 'Đôi nam/nữ'
-    },
-]
 
 const SideBar: FC<Props> = ({
     tournament,

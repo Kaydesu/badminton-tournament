@@ -2,6 +2,8 @@ export interface CompeteMember {
     name: string;
     phone?: string;
     email?: string;
+    created: number;
+    seedRank: number;
 }
 
 export interface CompeteTeam {
@@ -19,6 +21,7 @@ export interface TournamentSchema {
     name: string;
     age: number;
     hostId: string; // team Id
+    status: "prepare" | "ready",
     menSingle?: CompetitionFormat,
     womenSingle?: CompetitionFormat,
     menDouble?: CompetitionFormat,

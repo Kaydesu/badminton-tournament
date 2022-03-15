@@ -111,13 +111,22 @@ export const StatisticLayout = styled.div`
                 }
                 &__input {
                     flex-grow: 1;
+                    display: flex;
                     position: relative;
+
+                    .tambo-input {
+                        width: 100%;
+                    }
+
                     .tambo-input__input {
                         width: 100%;
                         padding: 5px 12px;
                     }
                     .ant-select {
                         width: 100%;
+                        &.double:first-of-type {
+                            margin-right: 10px;
+                        }
                     }
                 }
 
@@ -199,6 +208,13 @@ export const TableStyle = styled.div`
                         }
                         .tambo-icon.down {
                             transform: rotate(180deg);
+                        }
+                    }
+
+                    &.seed-rank {
+                        display: flex;
+                        .tambo-icon {
+                            font-size: 18px;
                         }
                     }
                 }

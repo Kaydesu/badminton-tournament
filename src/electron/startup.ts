@@ -13,18 +13,7 @@ export const startWindowStream = () => {
     closeWindowStream.listen((e, payload) => {
         const appWindow = WindowManager.getWindow(payload);
         appWindow.close();
-        const res = fetchAll<TournamentSchema>('TOURNAMENTS');
-        closeWindowStream.response({
-            sender: e.sender,
-            response: {
-                status: 'success',
-                data: res,
-            },
-        });
-        console.log(res);
-    }).then((data) => {
-        const mainWindow = WindowManager.getMainWindow();
-        mainWindow.webContents.send("fetch:TOURNAMENTS/response", data.response);
+        WindowManager.goHome();
     });
 
 

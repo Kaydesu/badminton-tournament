@@ -21,8 +21,6 @@ const TeamList: FC<Props> = ({ data, onArange, onShowInfo, onRemoveMember }) => 
                 <TeamListItemStyled key={item.id} onDoubleClick={() => onShowInfo(item)}>
                     <span className='name'>{item.name}</span>
                     <span className="arange">
-                        <Icon onClick={() => onArange(index, 'up')} src={arrowUp} className='up' />
-                        <Icon onClick={() => onArange(index, 'down')} src={arrowUp} className='down' />
                         <Icon onClick={() => onRemoveMember(item.id)} src={trash} className='trash' />
                     </span>
                 </TeamListItemStyled>

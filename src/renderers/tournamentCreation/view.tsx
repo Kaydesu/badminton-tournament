@@ -18,6 +18,7 @@ const intialTournament: TournamentSchema = {
     hostId: '',
     age: null,
     name: '',
+    status: 'prepare',
     menSingle: {
         enabled: true,
         teams: []
