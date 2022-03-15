@@ -62,7 +62,7 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
         : (
             <EmptyView className='empty-view'>
                 <div className="empty-title">CHƯA CÓ GIẢI ĐẤU</div>
-                <Button>Tạo giải đấu mới</Button>
+                <Button onClick={() => openWindow(WINDOW_NAME.CREATE_TOURNAMENT)}>Tạo giải đấu mới</Button>
             </EmptyView >
         )
 }

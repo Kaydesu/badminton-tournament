@@ -13,7 +13,7 @@ export const InputStyle = styled.div`
         background: #EBEFF0;
         border-radius: 4px;
         padding: 10px 12px;
-        width: calc(100% - 24px);
+        width: 100%;
         ::placeholder {
             color: #7e8497;
             opacity: 0.7;

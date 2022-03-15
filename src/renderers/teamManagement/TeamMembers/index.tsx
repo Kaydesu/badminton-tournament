@@ -7,6 +7,7 @@ import TeamList from './TeamList'
 import plusCircle from '../../../assets/icons/add-circle.svg';
 import RegisterMember from './RegisterMember'
 import { AthleteSchema } from '@data/Athlete'
+import { useToastAction } from '@components/Toast'
 
 type Props = {
     members: string[];
@@ -29,6 +30,7 @@ const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMembe
     const [registerView, setRegisterView] = useState(members.length === 0);
     const [currentMember, setCurrentMember] = useState<AthleteSchema>(initialAtheleteInfo);
     const [teamMembers, setTeamMembers] = useState<AthleteSchema[]>([]);
+    const { setToastVisible, setToastContent } = useToastAction();
 
     useEffect(() => {
         getMemberInfo();
@@ -37,18 +39,22 @@ const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMembe
     }, [members]);
 
     const getMemberInfo = () => {
-        fetchBatch<AthleteSchema>('ATHLETES', members).then(response => {
-            const reRank = members.map(memberId => {
-                let match: AthleteSchema;
-                response.map(member => {
-                    if (member.id === memberId) {
-                        match = member;
-                    }
-                });
-                return match;
-            })
-            setTeamMembers(reRank);
-        })
+        if(members.length > 0) {
+            fetchBatch<AthleteSchema>('ATHLETES', members).then(response => {
+                const reRank = members.map(memberId => {
+                    let match: AthleteSchema;
+                    response.map(member => {
+                        if (member.id === memberId) {
+                            match = member;
+                        }
+                    });
+                    return match;
+                })
+                setTeamMembers(reRank);
+            });
+        } else {
+            setTeamMembers([]);
+        }
     }
 
     const onShowInfo = (info: AthleteSchema) => {
@@ -77,6 +83,12 @@ const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMembe
     }
 
     const handleSave = () => {
+        if(!currentMember.name) {
+            setToastVisible(true);
+            setToastContent(['Tên thành viên không được để trống'], 'error');
+            return;
+        }
+
         addMember(currentMember);
         setRegisterView(false);
     }

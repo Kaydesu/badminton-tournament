@@ -1,3 +1,4 @@
+import { useToastAction } from '@components/Toast';
 import { AthleteSchema } from '@data/Athlete';
 import { TeamSchema } from '@data/Team';
 import React, { useEffect, useState } from 'react'
@@ -46,6 +47,8 @@ const View = () => {
     const [currentTeam, setCurrentTeam] = useState<TeamSchema>(intialTeamInfo);
     const [mode, setMode] = useState<'add' | 'edit' | 'view'>('add');
 
+    const { setToastVisible, setToastContent } = useToastAction();
+
     useEffect(() => {
         getTeamList();
     }, []);
@@ -65,9 +68,38 @@ const View = () => {
     }
 
     const saveTeamData = (data: TeamSchema) => {
+        const errors = [];
+        if (data.teamName === '' || data.info.owner === '') {
+            !data.teamName && errors.push('Tên đội không được để trống')
+            !data.info.owner && errors.push('Tên chủ sân không được để trống')
+            setToastVisible(true);
+            setToastContent(errors, 'error');
+            return;
+        }
+
+        if (data.teamName !== '' && data.id === '') {
+            const index = teamList.findIndex(item => item.teamName.toLowerCase() === data.teamName.toLowerCase());
+            if (index > -1) {
+                errors.push('Đội đã tồn tại');
+                setToastVisible(true);
+                setToastContent(errors, 'error');
+                return;
+            }
+            save('TEAMS', data).then(response => {
+                getTeamList();
+                console.log('>>>>>>90', response);
+                setCurrentTeam(response);
+                setToastVisible(true);
+                setToastContent(['Tạo đội thành công'], 'success');
+            });
+            return;
+        }
+
         save('TEAMS', data).then(response => {
             getTeamList();
             setCurrentTeam(response);
+            setToastVisible(true);
+            setToastContent(['Chỉnh sửa thành công'], 'success');
         })
     }
 

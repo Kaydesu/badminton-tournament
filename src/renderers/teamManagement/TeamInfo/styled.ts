@@ -21,7 +21,7 @@ export const InfoForm = styled.form`
         }
         &--address {
             .tambo-input__input {
-                height: 190px;
+                height: 160px;
             }
         }
     }

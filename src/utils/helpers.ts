@@ -4,7 +4,7 @@ import path from 'path';
 import { TableNames } from './types';
 import { v4 as uniqueId } from 'uuid';
 
-const BASE_URL = path.resolve(__dirname, '../../storage/');
+const BASE_URL = path.resolve(__dirname, 'storage/');
 
 export function fetchOne<D extends ModelSchema>(id: string, table: TableNames): D {
     try {
@@ -13,7 +13,6 @@ export function fetchOne<D extends ModelSchema>(id: string, table: TableNames): 
         return instance;
     } catch (err) {
         throw new Error(err);
-
     }
 }
 
@@ -88,12 +87,15 @@ export function batchUpdate<D extends ModelSchema>(
 
 
 const readJSON = (table: string) => {
-    try {
+    if (fs.existsSync(`${BASE_URL}/TABLE_${table}.json`)) {
         const res = fs.readFileSync(`${BASE_URL}/TABLE_${table}.json`);
         return JSON.parse(JSON.stringify(res.toString()));
-    } catch (err) {
-        throw new Error(err);
+    } else {
+        fs.mkdir(BASE_URL, () => {
+            writeJSON(table, []);
+        })
     }
+
 }
 
 const writeJSON = (table: string, json: any) => {
@@ -102,23 +104,4 @@ const writeJSON = (table: string, json: any) => {
     } catch (err) {
         throw new Error(err);
     }
-}
-
-
-const reRank = (list:  any[], teamId: string) => {
-    const teamFilter = list.filter(item => item.teamId === teamId);
-
-    let max = 1;
-
-    const reRankList = teamFilter.map((item) => {
-        if(item.rankInTeam >= max) {
-            if(item.rankInTeam > max + 1) {
-                item.rankInTeam -= 1;
-            }
-            max = item.rankInTeam;
-        }
-        return item;
-    });
-
-    return reRankList;
 }

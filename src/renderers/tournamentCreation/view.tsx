@@ -7,6 +7,7 @@ import { TournamentForm } from './styled';
 import { Select } from 'antd';
 import { TournamentSchema } from '@data/Tournament';
 import { WINDOW_NAME } from '@utils/types';
+import { useToastAction } from '@components/Toast';
 
 const { fetch, save } = window.Api;
 const { closeWindow } = window.Controller;
@@ -46,6 +47,8 @@ const View = () => {
     const [newTournament, setNewTournament] = useState(intialTournament);
     const [teams, setTeams] = useState<TeamSchema[]>([]);
 
+    const { setToastContent, setToastVisible } = useToastAction();
+
     useEffect(() => {
         document.title = 'Tạo giải đấu';
 
@@ -70,7 +73,19 @@ const View = () => {
     }
 
     const createTournament = () => {
-        save<TournamentSchema>('TOURNAMENTS', newTournament).then(() => {
+        const errors = [];
+        if (newTournament.name === '' || newTournament.hostId === '') {
+            !newTournament.name && errors.push('Tên giải không được để trống');
+            !newTournament.hostId && errors.push('Phải chọn ban tổ chức giải đấu');
+            setToastVisible(true);
+            setToastContent(errors, 'error');
+            return;
+        }
+        const temp = JSON.parse(JSON.stringify(newTournament)) as TournamentSchema;
+        if (!temp.age) {
+            temp.age = 18;
+        }
+        save<TournamentSchema>('TOURNAMENTS', temp).then(() => {
             closeWindow(WINDOW_NAME.CREATE_TOURNAMENT);
         })
     }
@@ -95,7 +110,7 @@ const View = () => {
                         onChange={onChange}
                         type='number'
                         name='age'
-                        value={newTournament.age} />
+                        value={!newTournament.age ? '' : newTournament.age} />
                 </div>
             </div>
             <div className="field">

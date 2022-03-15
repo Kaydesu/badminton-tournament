@@ -38,6 +38,15 @@ export const TeamListItemStyled = styled.li`
     justify-content: space-between;
     cursor: pointer;
 
+    .name {
+        display: flex;
+        align-items: center;
+        .tambo-icon {
+            font-size: 16px;
+            margin-right: 5px;
+        }
+    }
+
     .arange {
         display: flex;
         align-items: center;
