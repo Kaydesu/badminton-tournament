@@ -51,5 +51,6 @@ export const TournamentLayout = styled.div`
 `
 
 export const TreeContainer = styled.div`
-
+    width: 100%;
+    height: 100%;
 `
