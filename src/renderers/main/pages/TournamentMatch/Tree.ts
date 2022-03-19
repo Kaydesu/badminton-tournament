@@ -1,10 +1,9 @@
-import { v4 as uniqueId } from 'uuid';
-
-const nodeWidth = 80;
-const nodeHeight = 30;
+import { nodeHeight, nodeWidth, playOffNodeHeight, playOffNodeWidth } from "@utils/constants";
 
 class TournamentBracket {
     private _canvas: HTMLCanvasElement;
+    private _treeLeft: Tree;
+    private _treeRight: Tree;
 
     constructor() {
         this._canvas = null;
@@ -20,41 +19,38 @@ class TournamentBracket {
         }
     }
 
+    get leftTree() {
+        return this._treeLeft;
+    }
+
+    get rightTree() {
+        return this._treeRight;
+    }
+
+    setTreeLeft(tree: Tree) {
+        this._treeLeft = tree;
+    }
+
+    setTreeRight(tree: Tree) {
+        this._treeRight = tree;
+    }
+
     get canvas() {
         return this._canvas;
     }
-
-    // drawBranch(node: Node) {
-    //     const ctx = this._canvas.getContext('2d');
-    //     ctx.strokeStyle = '#4B4B4B';
-    //     ctx.beginPath();
-    //     const to = node.to;
-    //     ctx.moveTo(to[0].x, to[0].y);
-    //     for (let i = 1; i < to.length; i++) {
-    //         ctx.lineTo(to[i].x, to[i].y);
-    //     }
-
-    //     const from = node.from;
-    //     ctx.moveTo(from[0].x, from[0].y);
-    //     for (let i = 1; i < from.length; i++) {
-    //         ctx.lineTo(from[i].x, from[i].y);
-    //     }
-
-    //     ctx.stroke();
-    // }
 }
 
 export class Tree {
     private _direction: 'toRight' | 'toLeft';
     private _canvas: HTMLCanvasElement;
     private _levels: Map<number, Node>[];
-    private _playoff: {
+    private _playoff: Map<number, {
         athlete01: Node;
         athlete02: Node;
-        to: number;
-    }[]
+    }>
     private _position: { x: number; y: number };
     private _size: { width: number; height: number };
+    private _from: number;
 
     constructor(
         x: number,
@@ -69,10 +65,19 @@ export class Tree {
         this._direction = direction;
         this._canvas = canvas;
         this._levels = [];
-        this._playoff = [];
+        this._playoff = new Map;
+        this._from = 1;
     }
 
-    createLevels(entries: number) {
+    getNode(key: number) {
+        return this._levels[0].get(key);
+    }
+
+    getPlayOff(key: number) {
+        return this._playoff.get(key);
+    }
+
+    createLevels(entries: number, from: number) {
         let level = 0;
         for (let i = entries; i >= 1; i /= 2) {
             const arr = new Array(Math.floor(i)).fill(0);
@@ -80,45 +85,75 @@ export class Tree {
             arr.map((_, index) => {
                 const newNode = new Node(0, 0, nodeWidth, nodeHeight);
                 if (level > 0) {
-                    const added = index + 1;
+                    const added = from + index;
                     this._levels[level - 1].get(index + added).converge(newNode);
                     this._levels[level - 1].get(index + added + 1).converge(newNode);
                 }
-                nodes.set(index + 1, newNode);
+                nodes.set(from + index, newNode);
             });
             this._levels.push(nodes);
             level += 1;
         }
-        this.createPlayOff(7);
+        // console.log(this._levels[0]);
+        this._from = from;
     }
 
-    createPlayOff(to: number) {
-        const athlete01 = new Node(0, 0, nodeWidth, nodeHeight);
-        const athlete02 = new Node(0, 0, nodeWidth, nodeHeight);
-        athlete01.converge(this._levels[0].get(to));
-        athlete02.converge(this._levels[0].get(to));
-        this._playoff.push({
-            athlete01,
-            athlete02,
-            to,
-        })
+    createPlayOff(total: number) {
+        let count = 0;
+        this._levels[0].forEach((node, to) => {
+            if (count < total) {
+                const athlete01 = new Node(0, 0, playOffNodeWidth, playOffNodeHeight);
+                const athlete02 = new Node(0, 0, playOffNodeWidth, playOffNodeHeight);
+                athlete01.converge(node);
+                athlete02.converge(node);
+                this._playoff.set(to, {
+                    athlete01,
+                    athlete02
+                });
+            }
+            count++;
+        });
     }
 
     render() {
         this.distributeVertical();
         this.distributeHorizontal();
+        if (this._playoff.size > 0) {
+            this.distributePlayOffs();
+        }
+
+        if (this._direction === 'toLeft') {
+            this._canvas.getContext('2d').translate(this._position.x + this._size.width, 0);
+            this._canvas.getContext('2d').scale(-1, 1);
+        } else {
+            this._canvas.getContext('2d').translate(this._position.x, 0);
+        }
+
         this._levels.map((nodes, index) => {
-            nodes.forEach(node => {
+            nodes.forEach((node, key) => {
+                if (this._playoff.size > 0 &&
+                    key === this._from &&
+                    index === 0
+                ) {
+                    const middlePoint01 = node.parents[0].out;
+                    const middlePoint02 = node.parents[1].out;
+                    const average = (middlePoint02.y + middlePoint01.y) / 2;
+                    node.position({
+                        x: node.position().x,
+                        y: average - nodeHeight / 2,
+                    })
+                }
                 this.drawNode(node);
-                this.drawBranch(node, index !== 0);
+                this.drawBranch(node);
             })
         });
-        this._playoff.map(playoff => {
+
+        this._playoff.forEach(playoff => {
             this.drawNode(playoff.athlete01);
             this.drawNode(playoff.athlete02);
-            this.connectToChild(playoff.athlete01);
-            this.connectToChild(playoff.athlete02);
-        })
+            this.drawBranch(playoff.athlete01);
+            this.drawBranch(playoff.athlete02);
+        });
     }
 
     private drawNode(node: Node) {
@@ -144,95 +179,61 @@ export class Tree {
             const from = node.from;
             ctx.moveTo(from[0].x, from[0].y);
             for (let i = 1; i < from.length; i++) {
-                ctx.lineTo(from[i].x, from[i].y);
+                ctx.lineTo(from[i].x, from[0].y);
             }
         }
-        ctx.stroke();
-    }
-
-    private connectToChild(node: Node) {
-        const ctx = this._canvas.getContext('2d');
-        ctx.strokeStyle = '#4B4B4B';
-        ctx.beginPath();
-        const out = node.out;
-        const child = node.child;
-        const to = child.in;
-        ctx.moveTo(out.x, out.y);
-        ctx.lineTo(to.x, to.y);
         ctx.stroke();
     }
 
     private distributeVertical() {
-        if (this._playoff.length > 0) {
-            const totalCount = this._levels[0].size;
-            const totalHeight = nodeHeight * totalCount;
-            const spacing = ((this._size.height - totalHeight) / (totalCount - 1));
-            this._levels[0].forEach((node, key) => {
-                const index = Number(key) - 1;
+        const totalCount = this._levels[0].size;
+        const totalHeight = nodeHeight * totalCount;
+        const spacing = ((this._size.height - totalHeight) / (totalCount - 1));
+        this._levels[0].forEach((node, key) => {
+            const index = key - this._from;
+            node.position({
+                ...node.position(),
+                y: (nodeHeight + spacing) * index,
+            })
+        });
+
+        for (let i = 1; i < this._levels.length; i++) {
+            this._levels[i].forEach((node, key) => {
+                const out1 = node.parents[0].out;
+                const out2 = node.parents[1].out;
+                const averageY = (out1.y + out2.y) / 2;
                 node.position({
                     ...node.position(),
-                    y: (nodeHeight + spacing) * index,
+                    y: averageY - nodeHeight / 2,
                 })
             });
-
-            this._playoff.forEach((playoff, index) => {
-                const child = playoff.athlete01.child;
-                playoff.athlete01.position({
-                    x: 0,
-                    y: child.position().y === 0 ? 0 : child.position().y - nodeHeight * 1.5,
-                });
-
-                playoff.athlete02.position({
-                    x: 0,
-                    y: (child.position().y + nodeHeight) === this._size.height ?
-                        this._size.height - nodeHeight :
-                        child.position().y + nodeHeight * 1.5,
-                });
-            });
-
-            for (let i = 1; i < this._levels.length; i++) {
-                this._levels[i].forEach((node, key) => {
-                    const out1 = node.parents[0].out;
-                    const out2 = node.parents[1].out;
-
-                    const averageY = (out1.y + out2.y) / 2;
-
-                    node.position({
-                        ...node.position(),
-                        y: averageY - nodeHeight / 2,
-                    })
-                });
-            }
-        } else {
-            const totalCount = this._levels[0].size;
-            const totalHeight = nodeHeight * totalCount;
-            const spacing = ((this._size.height - totalHeight) / (totalCount - 1));
-            this._levels[0].forEach((node, key) => {
-                const index = Number(key) - 1;
-                node.position({
-                    ...node.position(),
-                    y: (nodeHeight + spacing) * index,
-                })
-            });
-
-            for (let i = 1; i < this._levels.length; i++) {
-                this._levels[i].forEach((node, key) => {
-                    const out1 = node.parents[0].out;
-                    const out2 = node.parents[1].out;
-
-                    const averageY = (out1.y + out2.y) / 2;
-
-                    node.position({
-                        ...node.position(),
-                        y: averageY - nodeHeight / 2,
-                    })
-                });
-            }
         }
     }
 
+    private distributePlayOffs() {
+        this._playoff.forEach((playoff, key) => {
+            if (key === this._from) {
+                const firstSlot = { x: 0, y: 0 };
+                const secondSlot = { x: 0, y: (playOffNodeHeight + 10) };
+                playoff.athlete01.position(firstSlot);
+                playoff.athlete02.position(secondSlot);
+            } else if (key === this._levels[0].size) {
+                const secondSlot = { x: 0, y: this._size.height - playOffNodeHeight };
+                const firstSlot = { x: 0, y: secondSlot.y - (playOffNodeHeight + 10) };
+                playoff.athlete01.position(firstSlot);
+                playoff.athlete02.position(secondSlot);
+            } else {
+                const middlePoint = playoff.athlete01.child.in;
+                const firstSlot = { x: 0, y: middlePoint.y - 5 - playOffNodeHeight };
+                const secondSlot = { x: 0, y: firstSlot.y + (playOffNodeHeight + 10) };
+                playoff.athlete01.position(firstSlot);
+                playoff.athlete02.position(secondSlot);
+            }
+        })
+    }
+
     private distributeHorizontal() {
-        if (this._playoff.length === 0) {
+        if (this._playoff.size === 0) {
             const totalWidth = nodeWidth * this._levels.length;
             const spacing = (this._size.width - totalWidth) / (this._levels.length - 1);
             this._levels.map((level, index) => {
@@ -244,25 +245,18 @@ export class Tree {
                 })
             });
         } else {
-            const totalWidth = nodeWidth * (this._levels.length + 1);
-            const spacing = (this._size.width - totalWidth) / (this._levels.length + 1);
+            const totalWidth = nodeWidth * this._levels.length;
+
+            const spacing = (this._size.width - 120 - totalWidth) / (this._levels.length - 1);
             this._levels.map((level, index) => {
                 level.forEach(node => {
                     node.position({
                         ...node.position(),
-                        x: (nodeWidth + spacing) * (index + 1),
+                        x: index === 0 ? 120 : (nodeWidth + spacing) * index + 120,
                     })
                 })
             });
         }
-    }
-
-    private setNodeSize(size: { width: number, height: number }) {
-        this._levels.map(nodes => {
-            nodes.forEach(node => {
-                node.size(size);
-            })
-        })
     }
 }
 
@@ -343,6 +337,10 @@ class Node {
 
     get child() {
         return this._child;
+    }
+
+    get hasParents() {
+        return this._parents.length > 0;
     }
 
     position(pos?: { x: number; y: number }): { x: number; y: number } {

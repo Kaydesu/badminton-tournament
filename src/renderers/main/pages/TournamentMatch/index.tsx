@@ -3,7 +3,7 @@ import { TournamentLayout } from './styled';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '@components/Icon';
 import Button from '@components/Button';
-import { Content, TournamentSchema } from '@data/Tournament';
+import { CompeteMember, CompeteTeam, Content, TournamentSchema } from '@data/Tournament';
 import { Dropdown, Menu, Spin } from 'antd';
 import caretLine from '../../../../assets/icons/caret-line.svg';
 import caretDown from '../../../../assets/icons/caret-down.svg';
@@ -20,6 +20,7 @@ const TournamentMatch = () => {
 
     const [tournament, setTournament] = useState<TournamentSchema>(null);
     const [content, setContent] = useState<Content>(Content.MAN_SINGLE);
+    const [start, setStart] = useState<number>(null);
 
     useEffect(() => {
         fetch<TournamentSchema>('TOURNAMENTS', match.id).then((response) => {
@@ -43,6 +44,42 @@ const TournamentMatch = () => {
                 return '';
         }
     }, [content]);
+
+    const participants = useMemo(() => {
+        if (!tournament) {
+            return [];
+        }
+        let competeTeams: CompeteTeam[];
+        switch (content) {
+            case Content.MAN_SINGLE:
+                competeTeams = tournament.menSingle.teams;
+                break;
+            case Content.MAN_DOUBLE:
+                competeTeams = tournament.menDouble.teams;
+                break;
+            case Content.WOMAN_DOUBLE:
+                competeTeams = tournament.womenDouble.teams;
+                break;
+            case Content.WOMAN_SINGLE:
+                competeTeams = tournament.womenSingle.teams;
+                break;
+            case Content.MIXED_DOUBLE:
+                competeTeams = tournament.mixedDouble.teams;
+                break;
+            default:
+                return [];
+        }
+        const members: CompeteMember[] = [];
+        competeTeams.map((team) => {
+            team.members.map(member => {
+                members.push(member);
+            })
+        });
+        members.sort((a, b) =>
+            (b.seedRank - a.seedRank) === 0 ? a.created - b.created : b.seedRank - a.seedRank
+        );
+        return members;
+    }, [content, tournament]);
 
     const contentOption = useMemo(() => {
         const temp = { ...tournament } as any;
@@ -70,14 +107,14 @@ const TournamentMatch = () => {
     return (
         <TournamentLayout>
             <div className="header">
-                <button onClick={() => navigate('/')} >
+                <button onClick={() => navigate(`/tournament/${match.id}`)} >
                     <div className='redirect'>
                         <Icon src={caretLine} />
                         Ghi danh
                     </div>
                 </button>
                 <div className="action">
-                    <Button>Bắt đầu</Button>
+                    <Button onClick={() => setStart(new Date().getTime())} >Bắt đầu</Button>
                     <Button buttonType='secondary'>In sơ đồ</Button>
                 </div>
             </div>
@@ -92,8 +129,8 @@ const TournamentMatch = () => {
                         </div>
                         <div className="tournament-tree" id="tournament-tree-container">
                             <TournamentTree
-                                levels={3}
-                                participants={['aaaa', 'bbb', 'cccc', 'ddd', 'eeee', 'ffff', 'ggggg', 'hhhh']}
+                                start={start}
+                                participants={participants}
                             />
                         </div>
                     </div>

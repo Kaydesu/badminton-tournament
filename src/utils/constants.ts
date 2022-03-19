@@ -26,4 +26,10 @@ export const contentList = [
         content: Content.MIXED_DOUBLE,
         label: 'Đôi nam/nữ'
     },
-]
+];
+
+export const nodeWidth = 100;
+export const nodeHeight = 30;
+
+export const playOffNodeHeight = 25;
+export const playOffNodeWidth = 70;

@@ -43,6 +43,7 @@ export const TournamentLayout = styled.div`
         }
 
         .tournament-tree {
+            position: relative;
             width: 90%;
             height: calc(100% - 60px);
             margin-top: 12px;
@@ -53,4 +54,28 @@ export const TournamentLayout = styled.div`
 export const TreeContainer = styled.div`
     width: 100%;
     height: 100%;
+`
+
+export const NameContainer = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    .label {
+        position: absolute;
+        font-weight: 500;
+        color: #4b4b4b;
+        background-color: #EBEFF0;
+        padding: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+
+        &.red {
+            color: red;
+        }
+    }
 `

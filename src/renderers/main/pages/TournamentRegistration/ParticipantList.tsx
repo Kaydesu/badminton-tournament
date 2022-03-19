@@ -108,7 +108,9 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
             })
         });
 
-        participants.sort((a, b) => a.created - b.created);
+        participants.sort((a, b) =>
+            (b.seedRank - a.seedRank) === 0 ? a.created - b.created : b.seedRank - a.seedRank
+        );
 
         return participants.map((member: any, index) => (
             <tr key={member.name + index}>
