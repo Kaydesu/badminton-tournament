@@ -294,13 +294,15 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                 // let max = idList[idList.length - 1];
 
                 let officialSlots: any[] = [];
-                let highRankSlots: any[] = []
+                let highRankSlots: any[] = [];
+                let highRankList: any[] = [];
 
                 ballot.map((key, index) => {
                     const node = TournamentBracket.leftTree.getNode(key);
                     if (!node.hasParents) {
                         officialSlots.push(key);
                         highRankSlots.push(highRank + 1);
+                        highRankList.push(list[highRank]);
                         highRank += 1;
                         // pick.push({
                         //     index: key,
@@ -314,42 +316,88 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                 let min = highRankSlots[0];
                 let max = highRankSlots[highRankSlots.length - 1];
 
-                console.log('Official ballots: ', officialSlots);
-                console.log('High ranks: ', highRankSlots);
-                console.log(min, max);
-                let suffle = suffleList(list);
-                officialSlots.map((key, index) => {
+                let suffle = suffleList(highRankList);
+                // Just like case 0 playoffs:
+                const [ballot01, ballot02] = splitArray(officialSlots);
+                const [idList01, idList02] = splitArray(highRankSlots);
+                const [list01, list02] = splitArray(suffle);
+                // Debug:
+                // console.log('Official ballots: ', officialSlots);
+                // console.log('High ranks: ', highRankSlots);
+                // console.log(min, max);
+                // Implements:
+
+                let exclude: number[] = [];
+                min = idList01[0];
+                max = idList01[idList01.length - 1];
+                ballot01.map((key, index) => {
                     const node = TournamentBracket.leftTree.getNode(key);
                     if (!node.hasParents) {
-                        let picked = [];
-                        let randomIndex = generateRandom(min, max, exclude);
-                        picked.push(suffle[randomIndex - 1].name);
-                        exclude.push(randomIndex);
+                        const randomIndex = generateRandom(min, max, exclude);
                         pick.push({
                             index: key,
-                            picked,
+                            picked: [list01[randomIndex - 1].name],
                         });
+                        exclude.push(randomIndex);
+                    }
+                });
+                exclude = [];
+                ballot02.map((key, index) => {
+                    const node = TournamentBracket.leftTree.getNode(key);
+                    if (!node.hasParents) {
+                        const randomIndex = generateRandom(min, max, exclude);
+                        pick.push({
+                            index: key,
+                            picked: [list02[randomIndex - 1].name],
+                        });
+                        exclude.push(randomIndex);
                     }
                 });
 
-                // ballot.map((key, index) => {
+                exclude = [...highRankSlots];
+                let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
+                let playOffIds = idList.filter(id => !highRankSlots.includes(id));
+
+                console.log(exclude);
+                console.log(playOffBallots);
+                console.log(playOffIds);
+
+                min = playOffIds[0];
+                max = playOffIds[playOffIds.length - 1];
+                playOffBallots.map((key, index) => {
+                    const node = TournamentBracket.leftTree.getNode(key);
+                    if (node.hasParents) {
+                        let picked = [];
+                        let randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        pick.push({
+                            index: key,
+                            picked,
+                        })
+                    }
+                });
+
+                // officialSlots.map((key, index) => {
                 //     const node = TournamentBracket.leftTree.getNode(key);
-                //     if (node.hasParents) {
+                //     if (!node.hasParents) {
                 //         let picked = [];
                 //         let randomIndex = generateRandom(min, max, exclude);
-                //         picked.push(suffle[randomIndex - 1].name);
+                //         picked.push(list[randomIndex - 1].name);
                 //         exclude.push(randomIndex);
-
-                //         randomIndex = generateRandom(min, max, exclude);
-                //         picked.push(suffle[randomIndex - 1].name);
-                //         exclude.push(randomIndex);
-
                 //         pick.push({
                 //             index: key,
                 //             picked,
-                //         })
+                //         });
                 //     }
                 // });
+
+
             }
         }
 
