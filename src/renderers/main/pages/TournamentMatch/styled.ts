@@ -19,6 +19,11 @@ export const TournamentLayout = styled.div`
                 height: 36px;
                 width: 145px;
             }
+
+            .tambo-button.disabled {
+                opacity: 0.4;
+                pointer-events: none;
+            }
         }
     }
 
@@ -76,6 +81,10 @@ export const NameContainer = styled.div`
 
         &.red {
             color: red;
+        }
+
+        &.blue {
+            color: blue;
         }
     }
 `

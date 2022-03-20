@@ -21,12 +21,28 @@ const TournamentMatch = () => {
     const [tournament, setTournament] = useState<TournamentSchema>(null);
     const [content, setContent] = useState<Content>(Content.MAN_SINGLE);
     const [start, setStart] = useState<number>(null);
+    const [disabled, setDisabled] = useState(false);
 
     useEffect(() => {
         fetch<TournamentSchema>('TOURNAMENTS', match.id).then((response) => {
             setTournament(response);
         });
     }, []);
+
+    const startRandom = () => {
+        setDisabled(true);
+        let timer: any;
+
+        timer = setInterval(() => {
+            setStart(new Date().getTime());
+        }, 100);
+
+
+        setTimeout(() => {
+            clearInterval(timer);
+            setDisabled(false);
+        }, 3000);
+    }
 
     const contentText = useMemo(() => {
         switch (content) {
@@ -114,7 +130,7 @@ const TournamentMatch = () => {
                     </div>
                 </button>
                 <div className="action">
-                    <Button onClick={() => setStart(new Date().getTime())} >Bắt đầu</Button>
+                    <Button className={disabled ? 'disabled' : ''} onClick={startRandom} >Bắt đầu</Button>
                     <Button buttonType='secondary'>In sơ đồ</Button>
                 </div>
             </div>

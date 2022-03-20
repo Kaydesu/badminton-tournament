@@ -28,8 +28,8 @@ export const contentList = [
     },
 ];
 
-export const nodeWidth = 100;
+export const nodeWidth = 150;
 export const nodeHeight = 30;
 
 export const playOffNodeHeight = 25;
-export const playOffNodeWidth = 70;
+export const playOffNodeWidth = 100;

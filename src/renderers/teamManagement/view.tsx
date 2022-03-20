@@ -87,7 +87,6 @@ const View = () => {
             }
             save('TEAMS', data).then(response => {
                 getTeamList();
-                console.log('>>>>>>90', response);
                 setCurrentTeam(response);
                 setToastVisible(true);
                 setToastContent(['Tạo đội thành công'], 'success');

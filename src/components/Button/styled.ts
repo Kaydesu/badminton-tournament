@@ -11,6 +11,11 @@ export const MainButton = styled.button`
     &:hover {
         border-radius: 18px;
     }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
 `
 
 export const SecondaryButton = styled(MainButton)`

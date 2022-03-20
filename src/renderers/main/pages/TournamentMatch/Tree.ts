@@ -69,6 +69,10 @@ export class Tree {
         this._from = 1;
     }
 
+    getTotalPlayoffs() {
+        return this._playoff.size;
+    }
+
     getNode(key: number) {
         return this._levels[0].get(key);
     }
@@ -77,7 +81,15 @@ export class Tree {
         return this._playoff.get(key);
     }
 
-    createLevels(entries: number, from: number) {
+    generateBallots() {
+        const a: number[] = [];
+        this._levels[0].forEach((_, key) => {
+            a.push(key);
+        });
+        return a;
+    }
+
+    createLevels(entries: number) {
         let level = 0;
         for (let i = entries; i >= 1; i /= 2) {
             const arr = new Array(Math.floor(i)).fill(0);
@@ -85,17 +97,15 @@ export class Tree {
             arr.map((_, index) => {
                 const newNode = new Node(0, 0, nodeWidth, nodeHeight);
                 if (level > 0) {
-                    const added = from + index;
+                    const added = index + 1;
                     this._levels[level - 1].get(index + added).converge(newNode);
                     this._levels[level - 1].get(index + added + 1).converge(newNode);
                 }
-                nodes.set(from + index, newNode);
+                nodes.set(index + 1, newNode);
             });
             this._levels.push(nodes);
             level += 1;
         }
-        // console.log(this._levels[0]);
-        this._from = from;
     }
 
     createPlayOff(total: number) {
@@ -144,7 +154,7 @@ export class Tree {
                     })
                 }
                 this.drawNode(node);
-                this.drawBranch(node);
+                this.drawBranchBig(node, index === 0);
             })
         });
 
@@ -182,6 +192,41 @@ export class Tree {
                 ctx.lineTo(from[i].x, from[0].y);
             }
         }
+        ctx.stroke();
+    }
+
+    private drawBranchBig(node: Node, drawFrom: boolean = true) {
+        if (!node.child) {
+            return;
+        }
+        const ctx = this._canvas.getContext('2d');
+        ctx.strokeStyle = '#4B4B4B';
+        ctx.beginPath();
+        const childTop = node.child.top;
+        const out = node.out;
+        ctx.moveTo(out.x, out.y);
+        ctx.lineTo(childTop.x, out.y);
+        ctx.lineTo(childTop.x, childTop.y);
+
+        if (drawFrom) {
+            const from = node.from;
+            ctx.moveTo(from[0].x, from[0].y);
+            for (let i = 1; i < from.length; i++) {
+                ctx.lineTo(from[i].x, from[0].y);
+            }
+        }
+
+        // // for (let i = 1; i < to.length; i++) {
+        // //     ctx.lineTo(to[i].x, to[i].y);
+        // // }
+        // ctx.lineTo(0, 0);
+        // // if (drawFrom) {
+        // //     const from = node.from;
+        // //     ctx.moveTo(from[0].x, from[0].y);
+        // //     for (let i = 1; i < from.length; i++) {
+        // //         ctx.lineTo(from[i].x, from[0].y);
+        // //     }
+        // // }
         ctx.stroke();
     }
 
@@ -247,12 +292,12 @@ export class Tree {
         } else {
             const totalWidth = nodeWidth * this._levels.length;
 
-            const spacing = (this._size.width - 120 - totalWidth) / (this._levels.length - 1);
+            const spacing = (this._size.width - 150 - totalWidth) / (this._levels.length - 1);
             this._levels.map((level, index) => {
                 level.forEach(node => {
                     node.position({
                         ...node.position(),
-                        x: index === 0 ? 120 : (nodeWidth + spacing) * index + 120,
+                        x: index === 0 ? 150 : (nodeWidth + spacing) * index + 150,
                     })
                 })
             });
@@ -284,6 +329,20 @@ class Node {
         return {
             x: this._position.x,
             y: this._position.y + this._size.height / 2,
+        }
+    }
+
+    get top() {
+        return {
+            x: this._position.x + this._size.width / 2,
+            y: this._position.y,
+        }
+    }
+
+    get bottom() {
+        return {
+            x: this._position.x + this._size.width / 2,
+            y: this._position.y + this._size.height,
         }
     }
 
