@@ -382,22 +382,6 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                         })
                     }
                 });
-
-                // officialSlots.map((key, index) => {
-                //     const node = TournamentBracket.leftTree.getNode(key);
-                //     if (!node.hasParents) {
-                //         let picked = [];
-                //         let randomIndex = generateRandom(min, max, exclude);
-                //         picked.push(list[randomIndex - 1].name);
-                //         exclude.push(randomIndex);
-                //         pick.push({
-                //             index: key,
-                //             picked,
-                //         });
-                //     }
-                // });
-
-
             }
         }
 
