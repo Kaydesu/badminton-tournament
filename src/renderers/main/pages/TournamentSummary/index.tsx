@@ -32,6 +32,8 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
 
     }, [tournaments]);
 
+    console.log(tournamentInfo);
+
     return tournamentInfo.length > 0 ?
         (
             <TournamentSummaryLayout>
@@ -40,22 +42,37 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
                     <div onClick={() => openWindow(WINDOW_NAME.CREATE_TOURNAMENT)}><Icon src={addCircle} /></div>
                 </div>
                 <TournamentTable className='tambo-scrollbar'>
-                    <div className='grid-container'>
-                        <div className="headers">
-                            <span>Tên giải</span>
-                            <span>Chủ nhà</span>
-                            <span>Vận động viên</span>
-                        </div>
+                    <thead>
+                        <tr>
+                            <th>Tên giải</th>
+                            <th>Chủ nhà</th>
+                            <th>Đội tham gia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {
                             tournamentInfo.map(item => (
-                                <TournamentItem onClick={() => navigate(`/tournament/${item.id}`)} key={item.id}>
-                                    <span>{item.name}</span>
-                                    <span>{item.host}</span>
-                                    <span>{item.participants}</span>
-                                </TournamentItem>
+                                <tr key={item.id} onClick={() => navigate(`/tournament/${item.id}`)}>
+                                    <td>
+                                        <TournamentItem>
+                                            <span>{item.name}</span>
+                                        </TournamentItem>
+                                    </td>
+                                    <td>
+                                        <TournamentItem>
+                                            <span>{item.host}</span>
+                                        </TournamentItem>
+                                    </td>
+                                    <td>
+                                        <TournamentItem>
+                                            <span>{item.participants}</span>
+                                        </TournamentItem>
+                                    </td>
+                                </tr>
+
                             ))
                         }
-                    </div>
+                    </tbody>
                 </TournamentTable>
             </TournamentSummaryLayout>
         )

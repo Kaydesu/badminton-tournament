@@ -10,6 +10,10 @@ export const controller = {
 
     closeWindow(windowName: WINDOW_NAME) {
         ipcRenderer.send("closeWindow", windowName);
+    },
+
+    previewPrint(url: string) {
+        ipcRenderer.send("previewComponent", url);
     }
 }
 

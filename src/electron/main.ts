@@ -3,7 +3,7 @@ import { app, Menu, MenuItemConstructorOptions } from 'electron';
 import { AppMenu } from '@classes/MenuProvider';
 import WindowManager from '@classes/WindowManager';
 import { openTeamManagementWindow, openTournamentCreateWindow } from './createWindows';
-import { startWindowStream } from './startup';
+import { startPrintStream, startWindowStream } from './startup';
 import { setUpFetchTeam } from './setUpStreams';
 
 const menuTemplate: MenuItemConstructorOptions[] = [];
@@ -16,6 +16,7 @@ app.on('ready', () => {
 
   startWindowStream();
   setUpFetchTeam()
+  startPrintStream();
 
   WindowManager.createMainWindow();
   // Construct app menu

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import View from './view';
 import '../index.css';
 import 'antd/dist/antd.css';
+import 'paper-css/paper.css';
 import ToastProvider from '@components/Toast';
 
 ReactDOM.render(

@@ -16,29 +16,26 @@ export const TournamentSummaryLayout = styled.div`
     }
 `
 
-export const TournamentTable = styled.div`
-   margin-top: 20px;
+export const TournamentTable = styled.table`
+    margin-top: 20px;
+    margin-bottom: 15px;
+    width: 100%;
+    thead > tr > th {
+        font-size: 16px;
+        text-align: left;
+        padding: 0 12px;
+    }
 
-   .headers {
-        display: flex;
-        justify-content: space-between;
-        font-size: 20px;
-        margin-bottom: 12px;
-   }
+    tbody > tr {
+        background-color: #EBEFF0;
+        cursor: pointer;
+    }
 }
 `
 
 export const TournamentItem = styled.button`
-    height: 50px;
-    width: 100%;
-    border-radius: 4px;
-    background-color: #EBEFF0;
-    margin-bottom: 22px;
-    padding: 0 22px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    height: 42px;
+    padding: 0 12px;
     cursor: pointer;
 `
 

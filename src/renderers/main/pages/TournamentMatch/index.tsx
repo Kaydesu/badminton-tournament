@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { TournamentLayout } from './styled';
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { ContentStyle, pageStyle, TournamentLayout } from './styled';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '@components/Icon';
 import Button from '@components/Button';
@@ -9,14 +9,17 @@ import caretLine from '../../../../assets/icons/caret-line.svg';
 import caretDown from '../../../../assets/icons/caret-down.svg';
 import { contentList } from '@utils/constants';
 import TournamentTree from './TournamentTree';
+import { useReactToPrint } from 'react-to-print';
 
 
 const { fetch } = window.Api;
+const { previewPrint } = window.Controller;
 
 const TournamentMatch = () => {
 
     const navigate = useNavigate();
     const match = useParams<{ id: string }>();
+    const printRef = useRef<HTMLDivElement>(null);
 
     const [tournament, setTournament] = useState<TournamentSchema>(null);
     const [content, setContent] = useState<Content>(Content.MAN_SINGLE);
@@ -43,6 +46,37 @@ const TournamentMatch = () => {
             setDisabled(false);
         }, 3000);
     }
+
+    const printMatch = useReactToPrint({
+        content: () => printRef.current,
+        pageStyle: pageStyle,
+        // print: (target: HTMLIFrameElement) => {
+        //     return new Promise(() => {
+        //         let data = target.contentWindow.document.documentElement.outerHTML;
+        //         console.log(target.contentWindow.document);
+        //         // let blob = new Blob([data], { type: 'text/html' });
+        //         // let url = URL.createObjectURL(blob);
+        //         // previewPrint(url);
+        //     })
+        // }
+    });
+
+    // const printMatch = (target: any) => {
+    //     console.log(target);
+    //     previewPrint('connn cacc')
+    //     return new Promise(() => {
+    //         // let data = printRef.current.outerHTML;
+    //         // console.log(data);
+    //         // let blob = new Blob([data], { type: 'text/html' });
+    //         // let url = URL.createObjectURL(blob);
+
+    //         // // window.electronAPI.previewComponent(url, (response) => {
+    //         // //     console.log('Main: ', response);
+    //         // // });
+    //         // // //console.log('Main: ', data);
+    //     });
+    // }
+
 
     const contentText = useMemo(() => {
         switch (content) {
@@ -120,6 +154,10 @@ const TournamentMatch = () => {
         )
     }, [content, tournament]);
 
+    const getContent = (): any => {
+        return printRef.current;
+    }
+
     return (
         <TournamentLayout>
             <div className="header">
@@ -131,12 +169,12 @@ const TournamentMatch = () => {
                 </button>
                 <div className="action">
                     <Button className={disabled ? 'disabled' : ''} onClick={startRandom} >Bắt đầu</Button>
-                    <Button buttonType='secondary'>In sơ đồ</Button>
+                    <Button onClick={printMatch} buttonType='secondary'>In sơ đồ</Button>
                 </div>
             </div>
             {
                 tournament ? (
-                    <div className="content">
+                    <ContentStyle className="content sheet padding-10mm" ref={printRef}>
                         <div className="title">
                             <Dropdown overlay={contentOption} >
                                 <h2 className='tournament-name'>{tournament.name} - {contentText}</h2>
@@ -149,7 +187,7 @@ const TournamentMatch = () => {
                                 participants={participants}
                             />
                         </div>
-                    </div>
+                    </ContentStyle>
                 ) : (
                     <div className="loading">
                         <Spin size='large' spinning />
