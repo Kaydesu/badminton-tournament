@@ -170,7 +170,7 @@ export class Tree {
         const ctx = this._canvas.getContext('2d');
         const { x, y } = node.position();
         const { width, height } = node.size();
-        ctx.fillStyle = '#EBEFF0';
+        ctx.fillStyle = '#c8d3d5';
         ctx.beginPath();
         ctx.rect(x, y, width, height);
         ctx.fill();

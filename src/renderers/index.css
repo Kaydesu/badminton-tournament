@@ -5,6 +5,8 @@ body, html {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background-color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
 }
 
 button {

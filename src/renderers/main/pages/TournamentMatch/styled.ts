@@ -5,7 +5,7 @@ export const TournamentLayout = styled.div`
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        padding: 30px 25px;
+        padding: 10px 25px;
         .redirect {
             display: flex;
             align-items: center;
@@ -92,15 +92,7 @@ export const NameContainer = styled.div`
         transform: scale(0.9);
 
         .label {
-            background: #fff;
-            border: 1px solid #4b4b4b;
-            &.red {
-                color: #4b4b4b !important;
-            }
-             
-            &.blue {
-                color: #4b4b4b !important;
-            }
+            background-color: #c8d3d5 !important;
         }
     }
 
@@ -113,8 +105,8 @@ export const NameContainer = styled.div`
     .label {
         position: absolute;
         font-weight: 500;
-        color: #4b4b4b;
-        background-color: #EBEFF0;
+        color: #403f6e;
+        background-color: #c8d3d5;
         padding: 4px;
         overflow: hidden;
         text-overflow: ellipsis;

@@ -325,8 +325,8 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[1], 1)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[1], 1)}`}
                         key={slot.picked[1]}
                     >
                         {slot.picked[1]}
@@ -342,8 +342,8 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                             width: nodeWidth,
                             height: nodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 1)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 1)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -371,8 +371,8 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 2)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 2)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -385,8 +385,8 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[1], 2)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[1], 2)}`}
                         key={slot.picked[1]}
                     >
                         {slot.picked[1]}
@@ -402,8 +402,8 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
                             width: nodeWidth,
                             height: nodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 2)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 2)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
