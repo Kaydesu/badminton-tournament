@@ -1,5 +1,6 @@
-body, html {
-    color: #4B4B4B;
+body,
+html {
+    color: #4b4b4b;
     width: 100vw;
     height: 100vh;
     margin: 0;
@@ -7,6 +8,7 @@ body, html {
     overflow: hidden;
     background-color: #fff !important;
     -webkit-print-color-adjust: exact !important;
+    font-family: 'Nutito' !important;
 }
 
 button {
@@ -16,7 +18,8 @@ button {
     cursor: pointer;
 }
 
-input, textarea {
+input,
+textarea {
     border: none;
     outline: none;
     resize: none;
@@ -28,7 +31,8 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
-ul, li {
+ul,
+li {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -46,11 +50,25 @@ ul, li {
 
 .tambo-scrollbar::-webkit-scrollbar-thumb {
     border-radius: 5px;
-    background-color: #4B4B4B;
+    background-color: #4b4b4b;
     opacity: 0.5;
 }
 
 a {
-    color: #4B4B4B !important;
+    color: #4b4b4b !important;
     text-decoration: none !important;
+}
+
+@font-face {
+    font-family: "Nutito";
+    src: url(../assets/fonts/Nunito-Medium.ttf);
+    font-weight: 500;
+}
+
+@media print {
+    @font-face {
+        font-family: "Nutito";
+        src: url(../assets/fonts/Nunito-Medium.ttf);
+        font-weight: 500;
+    }
 }

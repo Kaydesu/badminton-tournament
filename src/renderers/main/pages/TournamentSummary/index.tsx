@@ -32,8 +32,6 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
 
     }, [tournaments]);
 
-    console.log(tournamentInfo);
-
     return tournamentInfo.length > 0 ?
         (
             <TournamentSummaryLayout>

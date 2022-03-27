@@ -56,8 +56,6 @@ export const startPrintStream = () => {
     stream.listen((e, url) => {
         let window = new BrowserWindow({ title: 'Preview', show: false, autoHideMenuBar: true }) as any;
         window.loadURL(url);
-        console.log(">>>>>>42 Object URL: ", url);
-
         window.webContents.once('did-finish-load', () => {
             window.webContents.printToPDF(printOptions).then((data: any) => {
                 let buf = Buffer.from(data);
@@ -72,9 +70,6 @@ export const startPrintStream = () => {
                 window.webContents.on('destroyed', () => {
                     window = null
                 });
-
-                console.log('>>>>>>>>>>76 Load base64:', url);
-
                 window.loadURL(url);
             }).catch((error: any) => {
                 console.log(error);

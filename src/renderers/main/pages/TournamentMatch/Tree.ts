@@ -2,8 +2,6 @@ import { nodeHeight, nodeWidth, playOffNodeHeight, playOffNodeWidth } from "@uti
 
 class TournamentBracket {
     private _canvas: HTMLCanvasElement;
-    private _treeLeft: Tree;
-    private _treeRight: Tree;
 
     constructor() {
         this._canvas = null;
@@ -17,22 +15,6 @@ class TournamentBracket {
         if (!document.getElementById(container).querySelector('canvas')) {
             document.getElementById(container).appendChild(this._canvas);
         }
-    }
-
-    get leftTree() {
-        return this._treeLeft;
-    }
-
-    get rightTree() {
-        return this._treeRight;
-    }
-
-    setTreeLeft(tree: Tree) {
-        this._treeLeft = tree;
-    }
-
-    setTreeRight(tree: Tree) {
-        this._treeRight = tree;
     }
 
     get canvas() {

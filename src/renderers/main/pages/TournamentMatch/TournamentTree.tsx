@@ -111,6 +111,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
             const matchTemplates = calculatePlayoffs(participantList.left.length);
             const width = 75 * containerRef.current.clientWidth / 100;
             const spacing = (containerRef.current.clientWidth - width) / 2;
+
             leftTree.current = new Tree(spacing, 0,
                 width,
                 containerRef.current.clientHeight,
@@ -123,6 +124,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
         } else if (participantList.left.length > 0 && participantList.right.length > 0) {
             // Setup left tree
             const leftTemplate = calculatePlayoffs(participantList.left.length)
+
             leftTree.current = new Tree(0, 0,
                 containerRef.current.clientWidth / 2 - 20,
                 containerRef.current.clientHeight,
@@ -311,11 +313,9 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
     }
 
     const onImageLoad = () => {
-        console.log("Loadddddd");
     }
 
     const getColorByName = (name: string, side: 1 | 2) => {
-        console.log(topTiers);
         return topTiers.first.includes(name) ? 'red' : topTiers.second.includes(name) ? 'blue' : 'none';
     }
 

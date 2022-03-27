@@ -40,15 +40,14 @@ const TournamentMatch = () => {
     const printMatch = useReactToPrint({
         content: () => printRef.current,
         pageStyle: pageStyle,
-        print: (target: HTMLIFrameElement) => {
-            return new Promise(() => {
-                let data = target.contentWindow.document.documentElement.outerHTML;
-                console.log(target.contentWindow.document);
-                let blob = new Blob([data], { type: 'text/html' });
-                let url = URL.createObjectURL(blob);
-                previewPrint(url);
-            })
-        },
+        // print: (target: HTMLIFrameElement) => {
+        //     return new Promise(() => {
+        //         let data = target.contentWindow.document.documentElement.outerHTML;
+        //         let blob = new Blob([data], { type: 'text/html' });
+        //         let url = URL.createObjectURL(blob);
+        //         previewPrint(url);
+        //     })
+        // },
     });
 
     const contentText = useMemo(() => {

@@ -81,6 +81,7 @@ class WindowManager {
             })
         );
         this._appWindows.get(name).loadURL(ENTRIES[name].webpack);
+        this._appWindows.get(name).setMenu(null);
         // this._appWindows.get(name).webContents.openDevTools();
     }
 

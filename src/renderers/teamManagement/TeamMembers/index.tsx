@@ -39,7 +39,7 @@ const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMembe
     }, [members]);
 
     const getMemberInfo = () => {
-        if(members.length > 0) {
+        if (members.length > 0) {
             fetchBatch<AthleteSchema>('ATHLETES', members).then(response => {
                 const reRank = members.map(memberId => {
                     let match: AthleteSchema;
@@ -83,9 +83,16 @@ const TeamMembers: FC<Props> = ({ members, addMember, removeMember, arrangeMembe
     }
 
     const handleSave = () => {
-        if(!currentMember.name) {
+        if (!currentMember.name) {
             setToastVisible(true);
             setToastContent(['Tên thành viên không được để trống'], 'error');
+            return;
+        }
+
+        const index = teamMembers.findIndex(member => member.name === currentMember.name);
+        if (index > -1) {
+            setToastVisible(true);
+            setToastContent(['Thành viên đã tồn tại'], 'error');
             return;
         }
 

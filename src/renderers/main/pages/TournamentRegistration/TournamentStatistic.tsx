@@ -318,6 +318,68 @@ const TournamentStatistic: FC<Props> = ({
         });
     }
 
+    const checkValidPariticipants = () => {
+        let min = 100;
+
+        if (tournament.menSingle.enabled) {
+            let sum = 0;
+            tournament.menSingle.teams.map(team => {
+                sum += team.members.length;
+            });
+            if (sum < min) {
+                min = sum;
+            }
+        }
+
+        if (tournament.menDouble.enabled) {
+            let sum = 0;
+            tournament.menDouble.teams.map(team => {
+                sum += team.members.length;
+            });
+            if (sum < min) {
+                min = sum;
+            }
+        }
+
+        if (tournament.womenSingle.enabled) {
+            let sum = 0;
+            tournament.womenSingle.teams.map(team => {
+                sum += team.members.length;
+            });
+            if (sum < min) {
+                min = sum;
+            }
+        }
+
+        if (tournament.womenDouble.enabled) {
+            let sum = 0;
+            tournament.womenDouble.teams.map(team => {
+                sum += team.members.length;
+            });
+            if (sum < min) {
+                min = sum;
+            }
+        }
+
+        if (tournament.mixedDouble.enabled) {
+            let sum = 0;
+            tournament.mixedDouble.teams.map(team => {
+                sum += team.members.length;
+            });
+            if (sum < min) {
+                min = sum;
+            }
+        }
+
+        if (min < 4) {
+            setToastVisible(true);
+            setToastContent(['Nội dung phải có ít nhất 4 vận động viên'], 'error');
+            return
+        }
+
+        navigate(`/tournament/match/${tournament.id}`);
+    }
+
     return (
         <StatisticStyled>
             <div className='header'>
@@ -327,7 +389,7 @@ const TournamentStatistic: FC<Props> = ({
                         Trang chủ
                     </div>
                 </button>
-                <button onClick={() => navigate(`/tournament/match/${tournament.id}`)}>
+                <button onClick={checkValidPariticipants}>
                     <div className='redirect redirect--foward'>
                         Thi đấu
                         <Icon src={caretLine} />

@@ -57,6 +57,7 @@ export const ContentStyle = styled.div`
 
     @media print {
         .title {
+            font-family: 'Nunito' !important;
             /* display: none; */
             .tambo-icon {
                 display: none;
@@ -92,6 +93,7 @@ export const NameContainer = styled.div`
         transform: scale(0.9);
 
         .label {
+            font-family: 'Nunito' !important;
             background-color: #c8d3d5 !important;
         }
     }

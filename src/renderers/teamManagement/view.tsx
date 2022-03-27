@@ -97,8 +97,8 @@ const View = () => {
         save('TEAMS', data).then(response => {
             getTeamList();
             setCurrentTeam(response);
-            setToastVisible(true);
-            setToastContent(['Chỉnh sửa thành công'], 'success');
+            // setToastVisible(true);
+            // setToastContent(['Chỉnh sửa thành công'], 'success');
         })
     }
 
