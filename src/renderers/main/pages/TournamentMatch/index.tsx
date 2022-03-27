@@ -34,31 +34,21 @@ const TournamentMatch = () => {
 
     const startRandom = () => {
         setDisabled(true);
-        let timer: any;
-
-        timer = setInterval(() => {
-            setStart(new Date().getTime());
-        }, 100);
-
-
-        setTimeout(() => {
-            clearInterval(timer);
-            setDisabled(false);
-        }, 3000);
+        setStart(new Date().getTime());
     }
 
     const printMatch = useReactToPrint({
         content: () => printRef.current,
         pageStyle: pageStyle,
-        // print: (target: HTMLIFrameElement) => {
-        //     return new Promise(() => {
-        //         let data = target.contentWindow.document.documentElement.outerHTML;
-        //         console.log(target.contentWindow.document);
-        //         let blob = new Blob([data], { type: 'text/html' });
-        //         let url = URL.createObjectURL(blob);
-        //         previewPrint(url);
-        //     })
-        // },
+        print: (target: HTMLIFrameElement) => {
+            return new Promise(() => {
+                let data = target.contentWindow.document.documentElement.outerHTML;
+                console.log(target.contentWindow.document);
+                let blob = new Blob([data], { type: 'text/html' });
+                let url = URL.createObjectURL(blob);
+                previewPrint(url);
+            })
+        },
     });
 
     const contentText = useMemo(() => {
@@ -148,8 +138,19 @@ const TournamentMatch = () => {
                     </div>
                 </button>
                 <div className="action">
-                    <Button className={disabled ? 'disabled' : ''} onClick={startRandom} >Bắt đầu</Button>
-                    <Button onClick={printMatch} buttonType='secondary'>In sơ đồ</Button>
+                    <Button
+                        className={disabled ? 'disabled' : ''}
+                        onClick={startRandom}
+                    >
+                        Bắt đầu
+                    </Button>
+                    <Button
+                        className={disabled ? 'disabled' : ''}
+                        onClick={printMatch}
+                        buttonType='secondary'
+                    >
+                        In sơ đồ
+                    </Button>
                 </div>
             </div>
             {
@@ -165,6 +166,7 @@ const TournamentMatch = () => {
                             <TournamentTree
                                 start={start}
                                 participants={participants}
+                                enableButtons={() => setDisabled(false)}
                             />
                         </div>
                     </ContentStyle>

@@ -3,12 +3,13 @@ import { nodeHeight, nodeWidth, playOffNodeHeight, playOffNodeWidth } from '@uti
 import { generateRandom, getBaseLog, isOdd, splitArray, suffleList } from '@utils/math';
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 // import { Stage, Layer } from 'react-konva';
-import { NameContainer, TreeContainer } from './styled';
+import { ImageContainer, NameContainer, TreeContainer } from './styled';
 import TournamentBracket, { Tree } from './Tree';
 
 type Props = {
     participants: CompeteMember[];
     start: number;
+    enableButtons: () => void;
 }
 
 interface Slot {
@@ -16,9 +17,10 @@ interface Slot {
     picked: string[];
 }
 
-const TournamentTree: FC<Props> = ({ participants, start }) => {
+const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
 
     const containerRef = useRef<HTMLDivElement>(null);
+    const [matchBase64, setMatchBase64] = useState(null);
     const [stageSize, setStageSize] = useState<{ width: number; height: number }>({
         width: 0,
         height: 0,
@@ -85,16 +87,24 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
 
     useEffect(() => {
         if (start) {
-            if (participantList.left.length > 0) {
-                const suffle = suffleList(participantList.left);
-                setLeftTreeResult(getNodePosition(leftTree.current, suffle));
-            }
-            if (participantList.right.length > 0) {
-                const suffle = suffleList(participantList.right);
-                setRightTreeResult(getNodePosition(rightTree.current, suffle));
-            }
+            // if (participantList.left.length > 0) {
+            //     const suffle = suffleList(participantList.left);
+            //     setLeftTreeResult(getNodePosition(leftTree.current, suffle));
+            // }
+            // if (participantList.right.length > 0) {
+            //     const suffle = suffleList(participantList.right);
+            //     setRightTreeResult(getNodePosition(rightTree.current, suffle));
+            // }
+            setMatchBase64(null);
+            matching().then(() => {
+                enableButtons();
+                const canvas = TournamentBracket.canvas;
+                const image = canvas.toDataURL("image/png");
+                setMatchBase64(image);
+            })
         }
     }, [start]);
+
 
     useEffect(() => {
         if (participantList.left.length > 0 && participantList.right.length === 0) {
@@ -278,6 +288,32 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
         return pick;
     }
 
+    const matching = () => {
+        return new Promise((resolve, reject) => {
+            let timer: any;
+
+            timer = setInterval(() => {
+                if (participantList.left.length > 0) {
+                    const suffle = suffleList(participantList.left);
+                    setLeftTreeResult(getNodePosition(leftTree.current, suffle));
+                }
+                if (participantList.right.length > 0) {
+                    const suffle = suffleList(participantList.right);
+                    setRightTreeResult(getNodePosition(rightTree.current, suffle));
+                }
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(timer);
+                resolve(null);
+            }, 3000);
+        })
+    }
+
+    const onImageLoad = () => {
+        console.log("Loadddddd");
+    }
+
     const getColorByName = (name: string, side: 1 | 2) => {
         console.log(topTiers);
         return topTiers.first.includes(name) ? 'red' : topTiers.second.includes(name) ? 'blue' : 'none';
@@ -426,6 +462,13 @@ const TournamentTree: FC<Props> = ({ participants, start }) => {
     return (
         <>
             {canvasContainer}
+            {
+                matchBase64 && (
+                    <ImageContainer>
+                        <img src={matchBase64} alt="lull" onLoad={onImageLoad} />
+                    </ImageContainer>
+                )
+            }
             <NameContainer>
                 {leftTreeRender}
                 {rightTreeRender}

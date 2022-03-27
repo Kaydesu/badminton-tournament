@@ -123,6 +123,25 @@ export const NameContainer = styled.div`
     }
 `
 
+export const ImageContainer = styled.div`
+    @media print {
+        position: fixed;
+        top: 2.5cm;
+        left: 5%;
+        width: 100%;
+        height: 100%;
+        margin: auto;
+        transform-origin: top left;
+        transform: scale(0.9);
+    }
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+`
+
 export const pageStyle = `
     @page {
         size: a4 landscape;
