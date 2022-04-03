@@ -36,11 +36,11 @@ type Props = {
     competeTeams: CompeteTeam[];
     handleDelete: (name: string, team: string) => void;
     handleUpdateRank: (memberName: string, teamName: string, dir: 'up' | 'down') => void;
+    currentTab: string;
+    setCurrentTab: (e: string) => void;
 }
 
-const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRank }) => {
-
-    const [currentTab, setCurrentTab] = useState('all');
+const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRank, currentTab, setCurrentTab }) => {
 
     useEffect(() => {
         if (currentTab !== 'all') {

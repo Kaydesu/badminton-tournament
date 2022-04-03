@@ -21,15 +21,9 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
     const [tournamentInfo, setTournamentInfo] = useState<TournamentSummary[]>([]);
 
     useEffect(() => {
-        const hostIds = tournaments.map(item => item.host);
-
-        Promise.all(hostIds.map((id) => fetch<TeamSchema>('TEAMS', id))).then(teams => {
-            setTournamentInfo(tournaments.map((item, i) => ({
-                ...item,
-                host: teams[i].teamName
-            })));
-        })
-
+        setTournamentInfo(tournaments.map((item) => ({
+            ...item
+        })));
     }, [tournaments]);
 
     return tournamentInfo.length > 0 ?

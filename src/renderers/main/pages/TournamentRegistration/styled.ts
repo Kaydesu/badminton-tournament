@@ -112,21 +112,27 @@ export const StatisticLayout = styled.div`
                 &__input {
                     flex-grow: 1;
                     display: flex;
+                    align-items: center;
                     position: relative;
 
                     .tambo-input {
                         width: 100%;
                     }
 
+                    .separator {
+                        margin: 0 5px;
+                    }
+
                     .tambo-input__input {
                         width: 100%;
                         padding: 5px 12px;
                     }
-                    .ant-select {
-                        width: 100%;
-                        &.double:first-of-type {
-                            margin-right: 10px;
-                        }
+                }
+
+                &__input--double {
+                    justify-content: flex-end;
+                    .tambo-input {
+                        width: calc(50% - 26px);
                     }
                 }
 

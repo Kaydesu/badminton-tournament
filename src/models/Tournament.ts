@@ -20,7 +20,7 @@ export interface TournamentSchema {
     id?: string;
     name: string;
     age: number;
-    hostId: string; // team Id
+    hostName: string; // team Id
     status: "prepare" | "ready",
     menSingle?: CompetitionFormat,
     womenSingle?: CompetitionFormat,

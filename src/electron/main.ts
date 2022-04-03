@@ -27,15 +27,15 @@ app.on('ready', () => {
     }
   }]);
 
-  const teamManagementMenu = new AppMenu('Quản lý đội', [{
-    label: 'Tạo đội mới',
-    click() {
-      openTeamManagementWindow();
-    }
-  }]);
+  // const teamManagementMenu = new AppMenu('Quản lý đội', [{
+  //   label: 'Tạo đội mới',
+  //   click() {
+  //     openTeamManagementWindow();
+  //   }
+  // }]);
+  
   menuTemplate.push(
     tournamentMenu.generateTemplate(),
-    teamManagementMenu.generateTemplate(),
   );
 
   const mainMenu = Menu.buildFromTemplate(menuTemplate);

@@ -1,16 +1,12 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { StatisticLayout, StatisticStyled } from './styled'
 import { Link, useNavigate } from 'react-router-dom';
 import caretLine from '../../../../assets/icons/caret-line.svg';
 import Icon from '@components/Icon';
 import ParticipantList from './ParticipantList';
 import Input from '@components/Input';
-import { Select } from 'antd';
 import Button from '@components/Button';
-import { TeamSchema } from '@data/Team';
-import { AthleteSchema } from '@data/Athlete';
 import { CompeteMember, Content, TournamentSchema } from '@data/Tournament';
-import { Sex } from '@utils/types';
 import { useToastAction } from '@components/Toast';
 
 interface TeamOptions {
@@ -18,10 +14,6 @@ interface TeamOptions {
     name: string;
     members: string[];
 }
-
-const Option = Select.Option;
-
-const { fetch, fetchBatch } = window.Api;
 
 const initialTeam: TeamOptions = {
     id: '',
@@ -55,14 +47,13 @@ const TournamentStatistic: FC<Props> = ({
     const navigate = useNavigate();
     const { setToastVisible, setToastContent } = useToastAction();
 
-    const [teamList, setTeamList] = useState<TeamOptions[]>([]);
-    const [memberList, setMemberList] = useState<AthleteSchema[]>([]);
-
     const [currentTeam, setCurrentTeam] = useState(initialTeam);
     const [currentMember, setCurrentMember] = useState([
         initialMember,
         initialMember,
     ]);
+
+    const [currentTab, setCurrentTab] = useState('all');
 
     const [info, setInfo] = useState<{
         email: string;
@@ -72,45 +63,9 @@ const TournamentStatistic: FC<Props> = ({
         phone: ''
     });
 
-    // useEffect:
-    useEffect(() => {
-        getTeamOptions();
-    }, []);
-
-    useEffect(() => {
-        if (currentTeam.id) {
-            getMemberList();
-        }
-    }, [currentTeam.id]);
-
-
+    const teamNameRef = useRef(null);
 
     /*=================================Common:==============================*/
-
-    const getTeamOptions = () => {
-        fetch<TeamSchema[]>('TEAMS').then(res => {
-            setTeamList(res.map(team => ({
-                id: team.id,
-                name: team.teamName,
-                members: team.members,
-            })))
-        })
-    }
-
-    const getMemberList = () => {
-        fetchBatch<AthleteSchema>('ATHLETES', currentTeam.members).then(res => {
-            setMemberList(res);
-        })
-    }
-
-    const getSex = (): Sex => {
-        switch (activeContent) {
-            case Content.MAN_SINGLE:
-                return 'MALE';
-            case Content.WOMAN_SINGLE:
-                return 'FEMALE';
-        }
-    }
 
     const onInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInfo({
@@ -136,108 +91,17 @@ const TournamentStatistic: FC<Props> = ({
         }
     }, [tournament, activeContent]);
 
-    /*=================================Team related:==============================*/
-    const handleSearchTeam = (e: string) => {
-        let value;
-        if (currentTeam.name.length === 1 && e === '') {
-            value = '';
-        } else {
-            value = e === '' ? currentTeam.name : e;
-        }
-        setCurrentTeam({
-            ...currentTeam,
-            name: value,
-        });
-    }
-
-    const handleSelectTeam = (id: string) => {
-        if (id !== '') {
-            const instance = teamList.find(item => item.id === id);
-            setCurrentTeam({ ...instance });
-        }
-    }
-
-    const teamOptions = useMemo(() => {
-        return teamList.map(teamInfo => (
-            <Option key={teamInfo.id} value={teamInfo.id}>
-                {teamInfo.name}
-            </Option>
-        ))
-    }, [teamList]);
-    /*=================================Member related:==============================*/
-    const handleSearchMember = (e: string, index: number) => {
-        let value;
-        if (currentMember[index].name.length === 1 && e === '') {
-            value = '';
-        } else {
-            value = e === '' ? currentMember[index].name : e;
-        }
-
-        const newMembers = JSON.parse(JSON.stringify(currentMember));
-
-        newMembers[index] = {
-            ...newMembers[index],
-            name: value,
-        }
-
-        setCurrentMember(newMembers);
-    }
-
-    const handleSelectMember = (id: string, index: number) => {
-        if (id !== '') {
-            const instance = memberList.find(item => item.id === id);
-
-            const newMembers = JSON.parse(JSON.stringify(currentMember));
-
-            newMembers[index] = {
-                ...newMembers[index],
-                id: instance.id,
-                name: instance.name,
-            }
-            setCurrentMember(newMembers);
-        }
-    }
-
-    const athleteOptions = useMemo(() => {
-        const filterByGender: {
-            male: JSX.Element[];
-            female: JSX.Element[];
-        } = {
-            male: [],
-            female: [],
-        }
-
-        if (currentTeam.id === '') {
-            filterByGender.male = null;
-            filterByGender.female = null;
-        } else {
-            filterByGender.male = memberList.map(member => member.sex === 'MALE' && (
-                <Option key={member.id} value={member.id}>
-                    {member.name}
-                </Option>
-            ));
-
-            filterByGender.female = memberList.map(member => member.sex === 'FEMALE' && (
-                <Option key={member.id} value={member.id}>
-                    {member.name}
-                </Option>
-            ))
-        }
-
-        return filterByGender;
-    }, [memberList]);
-
-
     /** ===================================== Call API==================================== */
 
     const register = () => {
         const errors: string[] = [];
+        const teamName = teamNameRef.current.value;
 
         if (activeContent === Content.MAN_DOUBLE ||
             activeContent === Content.WOMAN_DOUBLE ||
             activeContent === Content.MIXED_DOUBLE) {
-            if (!currentTeam.name || !currentMember[0].name || !currentMember[1].name) {
-                !currentTeam.name && errors.push('Không được bỏ trống tên đội');
+            if (!teamName || !currentMember[0].name || !currentMember[1].name) {
+                !teamName && errors.push('Không được bỏ trống tên đội');
                 !currentMember[0].name || !currentMember[1].name && errors.push('Không được bỏ trống tên vận động viên');
                 setToastVisible(true);
                 setToastContent(errors, 'error');
@@ -251,8 +115,8 @@ const TournamentStatistic: FC<Props> = ({
                 return;
             }
         } else {
-            if (!currentTeam.name || !currentMember[0].name) {
-                !currentTeam.name && errors.push('Không được bỏ trống tên đội');
+            if (!teamName || !currentMember[0].name) {
+                !teamName && errors.push('Không được bỏ trống tên đội');
                 !currentMember[0].name && errors.push('Không được bỏ trống tên vận động viên');
                 setToastVisible(true);
                 setToastContent(errors, 'error');
@@ -267,7 +131,7 @@ const TournamentStatistic: FC<Props> = ({
         }
 
         // Check if the team exist in teamList
-        const team = competeTeams.find(item => item.name === currentTeam.name);
+        const team = competeTeams.find(item => item.name === teamName);
         const newMember = {
             name: '',
             phone: info.phone,
@@ -292,18 +156,31 @@ const TournamentStatistic: FC<Props> = ({
                 return
             }
 
-            registerNewMember(currentTeam.name, newMember).then(() => {
+            registerNewMember(teamName, newMember).then(() => {
                 clearAll();
                 setToastVisible(true);
                 setToastContent(['Đăng ký thành công'], 'success');
             })
         } else {
-            registerNewTeam(currentTeam.name, newMember).then(() => {
+            registerNewTeam(teamName, newMember).then(() => {
                 clearAll();
                 setToastVisible(true);
                 setToastContent(['Đăng ký thành công'], 'success');
             })
         }
+    }
+
+    const handleChangeTeam = (e: any) => {
+        setCurrentTeam({
+            ...currentTeam,
+            name: e.target.value,
+        })
+    }
+
+    const handleChangeMember = (e: any, index: number) => {
+        const temp = JSON.parse(JSON.stringify(currentMember));
+        temp[index].name = e.target.value;
+        setCurrentMember(temp);
     }
 
     const clearAll = () => {
@@ -403,107 +280,23 @@ const TournamentStatistic: FC<Props> = ({
                         <div className="info-field">
                             <div className="info-field__label">Đội</div>
                             <div className="info-field__input">
-                                <Select
-                                    showSearch
-                                    optionFilterProp='children'
-                                    searchValue={currentTeam.name}
-                                    value={currentTeam.id}
-                                    onSearch={handleSearchTeam}
-                                    onChange={handleSelectTeam}
-                                >
-                                    {teamOptions}
-                                </Select>
+                                <Input ref={teamNameRef}
+                                    value={currentTab === 'all' ? currentTeam.name : currentTab}
+                                    onChange={handleChangeTeam}
+                                />
                             </div>
                         </div>
                         <div className="info-field">
                             <div className="info-field__label">Tên</div>
-                            <div className="info-field__input">
+                            <div className={`info-field__input ${activeContent === Content.MAN_DOUBLE || activeContent === Content.WOMAN_DOUBLE || activeContent === Content.MIXED_DOUBLE ? 'info-field__input--double' : ''}`}>
                                 {
                                     activeContent === Content.MAN_SINGLE || activeContent === Content.WOMAN_SINGLE ? (
-                                        <Select
-                                            showSearch
-                                            optionFilterProp='children'
-                                            searchValue={currentMember[0].name}
-                                            value={currentMember[0].id}
-                                            onSearch={(e) => handleSearchMember(e, 0)}
-                                            onChange={(e) => handleSelectMember(e, 0)}
-                                        >
-                                            {getSex() === 'MALE' ? athleteOptions.male : athleteOptions.female}
-                                        </Select>
-                                    ) : activeContent === Content.MAN_DOUBLE ? (
-                                        <>
-                                            <Select
-                                                className='double'
-                                                showSearch
-                                                optionFilterProp='children'
-                                                searchValue={currentMember[0].name}
-                                                value={currentMember[0].id}
-                                                onSearch={(e) => handleSearchMember(e, 0)}
-                                                onChange={(e) => handleSelectMember(e, 0)}
-                                            >
-                                                {athleteOptions.male}
-                                            </Select>
-                                            <Select
-                                                className='double'
-                                                showSearch
-                                                optionFilterProp='children'
-                                                value={currentMember[1].id}
-                                                searchValue={currentMember[1].name}
-                                                onSearch={(e) => handleSearchMember(e, 1)}
-                                                onChange={(e) => handleSelectMember(e, 1)}
-                                            >
-                                                {athleteOptions.male}
-                                            </Select>
-                                        </>
-                                    ) : activeContent === Content.WOMAN_DOUBLE ? (
-                                        <>
-                                            <Select
-                                                className='double'
-                                                showSearch
-                                                optionFilterProp='children'
-                                                searchValue={currentMember[0].name}
-                                                value={currentMember[0].id}
-                                                onSearch={(e) => handleSearchMember(e, 0)}
-                                                onChange={(e) => handleSelectMember(e, 0)}
-                                            >
-                                                {athleteOptions.female}
-                                            </Select>
-                                            <Select
-                                                className='double'
-                                                showSearch
-                                                optionFilterProp='children'
-                                                searchValue={currentMember[1].name}
-                                                value={currentMember[1].id}
-                                                onSearch={(e) => handleSearchMember(e, 1)}
-                                                onChange={(e) => handleSelectMember(e, 1)}
-                                            >
-                                                {athleteOptions.female}
-                                            </Select>
-                                        </>
+                                        <Input value={currentMember[0].name} onChange={(e) => handleChangeMember(e, 0)} />
                                     ) : (
                                         <>
-                                            <Select
-                                                className='double'
-                                                showSearch
-                                                optionFilterProp='children'
-                                                searchValue={currentMember[0].name}
-                                                value={currentMember[0].id}
-                                                onSearch={(e) => handleSearchMember(e, 0)}
-                                                onChange={(e) => handleSelectMember(e, 0)}
-                                            >
-                                                {athleteOptions.male}
-                                            </Select>
-                                            <Select
-                                                className='double'
-                                                showSearch
-                                                optionFilterProp='children'
-                                                searchValue={currentMember[1].name}
-                                                value={currentMember[1].id}
-                                                onSearch={(e) => handleSearchMember(e, 1)}
-                                                onChange={(e) => handleSelectMember(e, 1)}
-                                            >
-                                                {athleteOptions.female}
-                                            </Select>
+                                            <Input value={currentMember[0].name} onChange={(e) => handleChangeMember(e, 0)} />
+                                            <span className='separator'> - </span>
+                                            <Input value={currentMember[1].name} onChange={(e) => handleChangeMember(e, 1)} />
                                         </>
                                     )
                                 }
@@ -547,6 +340,8 @@ const TournamentStatistic: FC<Props> = ({
                 </div>
                 <div className="bottom">
                     <ParticipantList
+                        currentTab={currentTab}
+                        setCurrentTab={(e) => setCurrentTab(e)}
                         handleUpdateRank={handleUpdateRank}
                         handleDelete={deleteMember}
                         competeTeams={competeTeams}

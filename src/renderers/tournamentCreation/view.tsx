@@ -16,7 +16,7 @@ const { Option } = Select;
 
 const intialTournament: TournamentSchema = {
     id: '',
-    hostId: '',
+    hostName: '',
     age: null,
     name: '',
     status: 'prepare',
@@ -45,25 +45,12 @@ const intialTournament: TournamentSchema = {
 const View = () => {
 
     const [newTournament, setNewTournament] = useState(intialTournament);
-    const [teams, setTeams] = useState<TeamSchema[]>([]);
 
     const { setToastContent, setToastVisible } = useToastAction();
 
     useEffect(() => {
         document.title = 'Tạo giải đấu';
-
-        fetch<TeamSchema[]>('TEAMS').then(data => {
-            setTeams(data);
-        })
-
     }, []);
-
-    const handleSelectHost = (value: string) => {
-        setNewTournament({
-            ...newTournament,
-            hostId: value,
-        })
-    }
 
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewTournament({
@@ -74,9 +61,9 @@ const View = () => {
 
     const createTournament = () => {
         const errors = [];
-        if (newTournament.name === '' || newTournament.hostId === '') {
+        if (newTournament.name === '' || newTournament.hostName === '') {
             !newTournament.name && errors.push('Tên giải không được để trống');
-            !newTournament.hostId && errors.push('Phải chọn ban tổ chức giải đấu');
+            !newTournament.hostName && errors.push('Ban tổ chức không được để trống');
             setToastVisible(true);
             setToastContent(errors, 'error');
             return;
@@ -116,18 +103,11 @@ const View = () => {
             <div className="field">
                 <div className="field-label">Ban tổ chức</div>
                 <div className="field-input">
-                    {teams && teams.length > 0 && (
-
-                        <Select onChange={handleSelectHost} value={newTournament.hostId}>
-                            {
-                                teams.map(item => (
-                                    <Option value={item.id} key={item.id}>
-                                        {item.teamName}
-                                    </Option>
-                                ))
-                            }
-                        </Select>
-                    )}
+                    <Input
+                        onChange={onChange}
+                        name='hostName'
+                        value={!newTournament.hostName ? '' : newTournament.hostName}
+                    />
                 </div>
             </div>
             <div className="submit">

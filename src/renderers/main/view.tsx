@@ -20,7 +20,7 @@ const View = () => {
         fetchConsecutive('TOURNAMENTS').then((data: TournamentSchema[]) => {
             setTournaments(data.map(tournament => ({
                 id: tournament.id,
-                host: tournament.hostId,
+                host: tournament.hostName,
                 age: tournament.age,
                 name: tournament.name,
                 participants: getTotalParticipants(tournament),
@@ -30,7 +30,7 @@ const View = () => {
         fetch('TOURNAMENTS').then((data: TournamentSchema[]) => {
             setTournaments(data.map(tournament => ({
                 id: tournament.id,
-                host: tournament.hostId,
+                host: tournament.hostName,
                 age: tournament.age,
                 name: tournament.name,
                 participants: getTotalParticipants(tournament),
