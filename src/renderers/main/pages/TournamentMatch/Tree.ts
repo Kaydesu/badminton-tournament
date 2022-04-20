@@ -17,6 +17,11 @@ class TournamentBracket {
         }
     }
 
+    clear() {
+        const context = this._canvas.getContext('2d');
+        context.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    }
+
     get canvas() {
         return this._canvas;
     }

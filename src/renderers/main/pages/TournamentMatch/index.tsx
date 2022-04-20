@@ -25,6 +25,7 @@ const TournamentMatch = () => {
     const [content, setContent] = useState<Content>(Content.MAN_SINGLE);
     const [start, setStart] = useState<number>(null);
     const [disabled, setDisabled] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetch<TournamentSchema>('TOURNAMENTS', match.id).then((response) => {
@@ -103,12 +104,26 @@ const TournamentMatch = () => {
         return members;
     }, [content, tournament]);
 
+    const tree = useMemo(() => {
+        return (
+            <TournamentTree
+                start={start}
+                participants={participants}
+                enableButtons={() => setDisabled(false)}
+            />
+        )
+    }, [participants, start]);
+
     const contentOption = useMemo(() => {
         const temp = { ...tournament } as any;
         return tournament && (
             <Menu
                 onClick={(e) => setContent(() => {
                     const content = contentList.find(item => item.key === e.key)['content'];
+                    setLoading(true);
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 500);
                     return content;
                 })}
             >
@@ -162,11 +177,7 @@ const TournamentMatch = () => {
                             <Icon src={caretDown} />
                         </div>
                         <div className="tournament-tree" id="tournament-tree-container">
-                            <TournamentTree
-                                start={start}
-                                participants={participants}
-                                enableButtons={() => setDisabled(false)}
-                            />
+                            {!loading && tree}
                         </div>
                     </ContentStyle>
                 ) : (

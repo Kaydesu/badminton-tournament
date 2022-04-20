@@ -102,14 +102,16 @@ const TournamentStatistic: FC<Props> = ({
             activeContent === Content.MIXED_DOUBLE) {
             if (!teamName || !currentMember[0].name || !currentMember[1].name) {
                 !teamName && errors.push('Không được bỏ trống tên đội');
-                !currentMember[0].name || !currentMember[1].name && errors.push('Không được bỏ trống tên vận động viên');
+                if (!currentMember[0].name || !currentMember[1].name) {
+                    errors.push('Không được bỏ trống tên vận động viên');
+                } 
                 setToastVisible(true);
                 setToastContent(errors, 'error');
                 return;
             }
 
-            if (currentMember[0].name.length < 6 || currentMember[1].name.length < 6) {
-                errors.push('Tên phải có ít nhất 6 ký tự');
+            if (currentMember[0].name.length < 4 || currentMember[1].name.length < 4) {
+                errors.push('Tên phải có ít nhất 4 ký tự');
                 setToastVisible(true);
                 setToastContent(errors, 'error');
                 return;

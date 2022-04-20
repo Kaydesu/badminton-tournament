@@ -59,6 +59,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
         );
     }, []);
 
+
     useEffect(() => {
         if (participants.length >= 12) {
             const splitted = splitArray(suffleList(participants));
@@ -292,23 +293,33 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
 
     const matching = () => {
         return new Promise((resolve, reject) => {
-            let timer: any;
+            // let timer: any;
 
-            timer = setInterval(() => {
-                if (participantList.left.length > 0) {
-                    const suffle = suffleList(participantList.left);
-                    setLeftTreeResult(getNodePosition(leftTree.current, suffle));
-                }
-                if (participantList.right.length > 0) {
-                    const suffle = suffleList(participantList.right);
-                    setRightTreeResult(getNodePosition(rightTree.current, suffle));
-                }
-            }, 100);
+            // timer = setInterval(() => {
+            //     if (participantList.left.length > 0) {
+            //         // const suffle = suffleList(participantList.left);
+            //         setLeftTreeResult(getNodePosition(leftTree.current, participantList.left));
+            //     }
+            //     if (participantList.right.length > 0) {
+            //         // const suffle = suffleList(participantList.right);
+            //         setRightTreeResult(getNodePosition(rightTree.current, participantList.right));
+            //     }
+            // }, 100);
 
-            setTimeout(() => {
-                clearInterval(timer);
-                resolve(null);
-            }, 3000);
+            // setTimeout(() => {
+            //     clearInterval(timer);
+            //     resolve(null);
+            // }, 1200);
+
+            if (participantList.left.length > 0) {
+                // const suffle = suffleList(participantList.left);
+                setLeftTreeResult(getNodePosition(leftTree.current, participantList.left));
+            }
+            if (participantList.right.length > 0) {
+                // const suffle = suffleList(participantList.right);
+                setRightTreeResult(getNodePosition(rightTree.current, participantList.right));
+            }
+            resolve(null);
         })
     }
 
@@ -347,8 +358,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 1)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 1)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
