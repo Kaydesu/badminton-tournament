@@ -42,7 +42,7 @@ class WindowManager {
         });
         this._mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
         this._mainWindow.maximize();
-        // this._mainWindow.webContents.openDevTools();
+        this._mainWindow.webContents.openDevTools();
 
         this._mainWindow.on('closed', async () => {
             // e.preventDefault();

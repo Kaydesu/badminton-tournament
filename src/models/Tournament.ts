@@ -8,6 +8,7 @@ export interface CompeteMember {
 
 export interface CompeteTeam {
     name: string;
+    symbol: string;
     members: CompeteMember[];
 }
 

@@ -22,12 +22,30 @@ export const generateRandom = (min: number, max: number, exclude: number[]) => {
 export const suffleList = (list: any[]) => {
     const firstHalf: any[] = [];
     const secondHalf: any[] = [];
-
+    let count = 0;
+    let key = false;
+    const batch = list.map((_, index) => {
+        if (count > 1) {
+            count = 0;
+            key = !key;
+        }
+        count++;
+        return key ? 1 : 0;
+    });
+    
     list.map((item, index) => {
-        if (isOdd(index)) {
-            firstHalf.push(item);
+        if (isOdd(batch[index])) {
+            if (isOdd(index)) {
+                firstHalf.push(item);
+            } else {
+                secondHalf.push(item)
+            }
         } else {
-            secondHalf.push(item)
+            if (!isOdd(index)) {
+                firstHalf.push(item);
+            } else {
+                secondHalf.push(item)
+            }
         }
     });
 

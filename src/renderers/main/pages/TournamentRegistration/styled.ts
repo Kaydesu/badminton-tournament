@@ -53,6 +53,7 @@ export const SideBarItem = styled.button`
 
 export const StatisticStyled = styled.div`
     flex-grow: 1;
+    overflow-y: auto;
 
     .header {
         display: flex;
@@ -127,6 +128,15 @@ export const StatisticLayout = styled.div`
                         width: 100%;
                         padding: 5px 12px;
                     }
+                    &--team {
+                        .tambo-input:first-of-type {
+                            flex-grow: 1;
+                        }
+                        .tambo-input:last-of-type {
+                            width: 100px;
+                            margin-left: 10px;
+                        }
+                    }
                 }
 
                 &__input--double {
@@ -177,6 +187,7 @@ export const TableTabs = styled.div`
 `
 
 export const TableStyle = styled.div`
+    margin-bottom: 30px;
     height: 350px;
     background-color: #EBEFF0; 
     overflow: hidden;

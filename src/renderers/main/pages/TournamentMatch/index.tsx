@@ -95,6 +95,7 @@ const TournamentMatch = () => {
         const members: CompeteMember[] = [];
         competeTeams.map((team) => {
             team.members.map(member => {
+                member.name = `${member.name}[${team.symbol || team.name}]`
                 members.push(member);
             })
         });

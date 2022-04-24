@@ -63,6 +63,9 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
     useEffect(() => {
         if (participants.length >= 12) {
             const splitted = splitArray(suffleList(participants));
+            console.log(suffleList(splitted[0]));
+            console.log(suffleList(splitted[1]));
+
             setParticipantList({
                 left: splitted[0],
                 right: splitted[1],
@@ -173,6 +176,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
     }
 
     const getNodePosition = (tree: Tree, participants: CompeteMember[]) => {
+        console.log('>>>>>>>> Participants: ', participants);
         const ballot = tree.generateBallots();
         const idList = participants.map((_, index) => index + 1)
         const list = participants.map((item) => ({
@@ -182,6 +186,36 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
 
         let pick: Slot[] = [];
 
+        // const [ballot01, ballot02] = splitArray(ballot);
+        // const [idList01, idList02] = splitArray(idList);
+        // const [list01, list02] = splitArray(list);
+        // let exclude: number[] = [];
+        // let min = idList01[0];
+        // let max = idList01[idList01.length - 1];
+
+        // ballot01.map((key, index) => {
+        //     const node = tree.getNode(key);
+        //     if (!node.hasParents) {
+        //         const randomIndex = generateRandom(min, max, exclude);
+        //         pick.push({
+        //             index: key,
+        //             picked: [list01[randomIndex - 1].name],
+        //         });
+        //         exclude.push(randomIndex);
+        //     }
+        // });
+        // exclude = [];
+        // ballot02.map((key, index) => {
+        //     const node = tree.getNode(key);
+        //     if (!node.hasParents) {
+        //         const randomIndex = generateRandom(min, max, exclude);
+        //         pick.push({
+        //             index: key,
+        //             picked: [list02[randomIndex - 1].name],
+        //         });
+        //         exclude.push(randomIndex);
+        //     }
+        // });
         if (tree.getTotalPlayoffs() === 0) {
             const [ballot01, ballot02] = splitArray(ballot);
             const [idList01, idList02] = splitArray(idList);
@@ -189,6 +223,9 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
             let exclude: number[] = [];
             let min = idList01[0];
             let max = idList01[idList01.length - 1];
+
+            console.log(ballot01);
+            console.log(idList);
 
             ballot01.map((key, index) => {
                 const node = tree.getNode(key);
@@ -228,65 +265,130 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                 }
             });
 
-            // Just like case 0 playoffs:
-            const [ballot01, ballot02] = splitArray(officialSlots);
-            const [idList01, idList02] = splitArray(highRankSlots);
-            const [list01, list02] = splitArray(highRankList);
-            let exclude: number[] = [];
-            let min = idList01[0];
-            let max = idList01[idList01.length - 1];
+            if (officialSlots.length > 2) {
+                const [ballot01, ballot02] = splitArray(officialSlots);
+                const [idList01, idList02] = splitArray(highRankSlots);
+                const [list01, list02] = splitArray(highRankList);
+                let exclude: number[] = [];
+                let min = idList01[0];
+                let max = idList01[idList01.length - 1];
 
-            ballot01.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    const randomIndex = generateRandom(min, max, exclude);
-                    pick.push({
-                        index: key,
-                        picked: [list01[randomIndex - 1].name],
-                    });
-                    exclude.push(randomIndex);
-                }
-            });
-            exclude = [];
-            min = 0;
-            max = list02.length - 1;
+                ballot01.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (!node.hasParents) {
+                        const randomIndex = generateRandom(min, max, exclude);
+                        pick.push({
+                            index: key,
+                            picked: [list01[randomIndex - 1].name],
+                        });
+                        exclude.push(randomIndex);
+                    }
+                });
+                exclude = [];
+                min = 0;
+                max = list02.length - 1;
 
-            ballot02.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    const randomIndex = generateRandom(min, max, exclude);
-                    pick.push({
-                        index: key,
-                        picked: [list02[randomIndex].name],
-                    });
-                    exclude.push(randomIndex);
-                }
-            });
+                ballot02.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (!node.hasParents) {
+                        const randomIndex = generateRandom(min, max, exclude);
+                        pick.push({
+                            index: key,
+                            picked: [list02[randomIndex].name],
+                        });
+                        exclude.push(randomIndex);
+                    }
+                });
 
-            exclude = [...highRankSlots];
-            let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
-            let playOffIds = idList.filter(id => !highRankSlots.includes(id));
+                exclude = [...highRankSlots];
+                let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
+                let playOffIds = idList.filter(id => !highRankSlots.includes(id));
 
-            min = playOffIds[0];
-            max = playOffIds[playOffIds.length - 1];
-            playOffBallots.map((key, index) => {
-                const node = tree.getNode(key);
-                if (node.hasParents) {
-                    let picked = [];
-                    let randomIndex = generateRandom(min, max, exclude);
-                    picked.push(list[randomIndex - 1].name);
-                    exclude.push(randomIndex);
+                min = playOffIds[0];
+                max = playOffIds[playOffIds.length - 1];
+                playOffBallots.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (node.hasParents) {
+                        let picked = [];
+                        let randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list[randomIndex - 1].name);
+                        exclude.push(randomIndex);
 
-                    randomIndex = generateRandom(min, max, exclude);
-                    picked.push(list[randomIndex - 1].name);
-                    exclude.push(randomIndex);
+                        randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list[randomIndex - 1].name);
+                        exclude.push(randomIndex);
 
-                    pick.push({
-                        index: key,
-                        picked,
-                    })
-                }
-            });
+                        pick.push({
+                            index: key,
+                            picked,
+                        })
+                    }
+                });
+            } else {
+                // Just like case 0 playoffs:
+                // const [ballot01, ballot02] = splitArray(ballot);
+                // const [idList01, idList02] = splitArray(idList);
+                // const [list01, list02] = splitArray(list);
+                // let exclude: number[] = [];
+                // let min = idList01[0];
+                // let max = idList01[idList01.length - 1];
+
+                // console.log('>>>>> Min - max: ', min, max);
+
+                // ballot01.map((key, index) => {
+                //     const node = tree.getNode(key);
+                //     if (!node.hasParents) {
+                //         const randomIndex = generateRandom(min, max, exclude);
+                //         pick.push({
+                //             index: key,
+                //             picked: [list01[randomIndex - 1].name],
+                //         });
+                //         exclude.push(randomIndex);
+                //     }
+                // });
+                // exclude = [];
+                // ballot02.map((key, index) => {
+                //     const node = tree.getNode(key);
+                //     if (!node.hasParents) {
+                //         const randomIndex = generateRandom(min, max, exclude);
+                //         pick.push({
+                //             index: key,
+                //             picked: [list02[randomIndex - 1].name],
+                //         });
+                //         exclude.push(randomIndex);
+                //     }
+                // });
+
+
+                // console.log(">>>> After first round: ", pick);
+
+                // let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
+                // let playOffIds = idList.filter(id => !highRankSlots.includes(id));
+                // min = playOffIds[0];
+                // max = playOffIds[playOffIds.length - 1];
+
+                // console.log(playOffBallots);
+                // console.log(playOffIds);
+
+                // playOffBallots.map((key, index) => {
+                //     const node = tree.getNode(key);
+                //     if (node.hasParents) {
+                //         let picked = [];
+                //         let randomIndex = generateRandom(min, max, exclude);
+                //         picked.push(list[randomIndex - 1].name);
+                //         exclude.push(randomIndex);
+
+                //         randomIndex = generateRandom(min, max, exclude);
+                //         picked.push(list[randomIndex - 1].name);
+                //         exclude.push(randomIndex);
+
+                //         pick.push({
+                //             index: key,
+                //             picked,
+                //         })
+                //     }
+                // });
+            }
         }
         return pick;
     }
@@ -358,8 +460,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        className="label"
-                        // className={`label ${getColorByName(slot.picked[0], 1)}`}
+                        // className="label"
+                        className={`label ${getColorByName(slot.picked[0], 1)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -372,8 +474,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        className="label"
-                        // className={`label ${getColorByName(slot.picked[1], 1)}`}
+                        // className="label"
+                        className={`label ${getColorByName(slot.picked[1], 1)}`}
                         key={slot.picked[1]}
                     >
                         {slot.picked[1]}
@@ -389,8 +491,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: nodeWidth,
                             height: nodeHeight,
                         }}
-                        className="label"
-                        // className={`label ${getColorByName(slot.picked[0], 1)}`}
+                        // className="label"
+                        className={`label ${getColorByName(slot.picked[0], 1)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -418,8 +520,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        className="label"
-                        // className={`label ${getColorByName(slot.picked[0], 2)}`}
+                        // className="label"
+                        className={`label ${getColorByName(slot.picked[0], 2)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -432,8 +534,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        className="label"
-                        // className={`label ${getColorByName(slot.picked[1], 2)}`}
+                        // className="label"
+                        className={`label ${getColorByName(slot.picked[1], 2)}`}
                         key={slot.picked[1]}
                     >
                         {slot.picked[1]}
@@ -449,8 +551,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: nodeWidth,
                             height: nodeHeight,
                         }}
-                        className="label"
-                        // className={`label ${getColorByName(slot.picked[0], 2)}`}
+                        // className="label"
+                        className={`label ${getColorByName(slot.picked[0], 2)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -463,11 +565,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
     }, [rightTreeResult, stageSize]);
 
     const canvasContainer = useMemo(() => {
-        return (
-            <TreeContainer ref={containerRef} id="tree-container">
-
-            </TreeContainer>
-        )
+        return <TreeContainer ref={containerRef} id="tree-container" />;
     }, []);
 
     return (

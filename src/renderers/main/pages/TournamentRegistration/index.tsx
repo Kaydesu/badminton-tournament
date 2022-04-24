@@ -96,18 +96,20 @@ const TournamentRegistration: FC = () => {
         return newTournament;
     }
 
-    const registerNewMember = (name: string, member: CompeteMember) => {
+    const registerNewMember = (name: string, member: CompeteMember, symbol?: string) => {
         const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
         const team = temp.find(item => item.name === name);
+        team.symbol = symbol;
         team.members.push(member);
         const newTournament = setCompeteTeam(temp);
 
         return updateTournament(newTournament);
     }
-    const registerNewTeam = (name: string, member: CompeteMember) => {
+    const registerNewTeam = (name: string, member: CompeteMember, symbol?: string) => {
         const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
         temp.push({
             name,
+            symbol,
             members: [member],
         })
         const newTournament = setCompeteTeam(temp);
@@ -136,10 +138,10 @@ const TournamentRegistration: FC = () => {
         const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
         const team = temp.find(item => item.name === teamName);
         const member = team.members.find(item => item.name === name);
-        if(member.seedRank === 3 && dir === 'up') {
+        if (member.seedRank === 3 && dir === 'up') {
             return;
         }
-        if(member.seedRank === 0 && dir === 'down') {
+        if (member.seedRank === 0 && dir === 'down') {
             return;
         }
         if (dir === 'up') {

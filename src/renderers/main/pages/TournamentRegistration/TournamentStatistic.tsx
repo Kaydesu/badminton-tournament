@@ -12,12 +12,14 @@ import { useToastAction } from '@components/Toast';
 interface TeamOptions {
     id: string;
     name: string;
+    symbol: string;
     members: string[];
 }
 
 const initialTeam: TeamOptions = {
     id: '',
     name: '',
+    symbol: '',
     members: [],
 }
 
@@ -29,8 +31,8 @@ const initialMember = {
 type Props = {
     activeContent: Content;
     tournament: TournamentSchema;
-    registerNewMember: (name: string, member: CompeteMember) => Promise<void>;
-    registerNewTeam: (name: string, member: CompeteMember) => Promise<void>;
+    registerNewMember: (name: string, member: CompeteMember, symbol?: string) => Promise<void>;
+    registerNewTeam: (name: string, member: CompeteMember, symbol?: string) => Promise<void>;
     deleteMember: (name: string, team: string) => void;
     handleUpdateRank: (memberName: string, teamName: string, dir: 'up' | 'down') => void;
 }
@@ -56,14 +58,24 @@ const TournamentStatistic: FC<Props> = ({
     const [currentTab, setCurrentTab] = useState('all');
 
     const [info, setInfo] = useState<{
-        email: string;
+        yearOfBirth: number;
         phone: string;
     }>({
-        email: '',
+        yearOfBirth: null,
         phone: ''
     });
 
     const teamNameRef = useRef(null);
+    const teamSymbolRef = useRef(null);
+
+    useEffect(() => {
+        if (currentTab !== 'all') {
+            const symbol = competeTeams.find(team => team.name === currentTab).symbol;
+            setCurrentTeam({ ...currentTeam, symbol });
+        } else {
+            setCurrentTeam({ ...initialTeam });
+        }
+    }, [currentTab]);
 
     /*=================================Common:==============================*/
 
@@ -96,6 +108,7 @@ const TournamentStatistic: FC<Props> = ({
     const register = () => {
         const errors: string[] = [];
         const teamName = teamNameRef.current.value;
+        const symbol = teamSymbolRef.current.value;
 
         if (activeContent === Content.MAN_DOUBLE ||
             activeContent === Content.WOMAN_DOUBLE ||
@@ -104,14 +117,7 @@ const TournamentStatistic: FC<Props> = ({
                 !teamName && errors.push('Không được bỏ trống tên đội');
                 if (!currentMember[0].name || !currentMember[1].name) {
                     errors.push('Không được bỏ trống tên vận động viên');
-                } 
-                setToastVisible(true);
-                setToastContent(errors, 'error');
-                return;
-            }
-
-            if (currentMember[0].name.length < 4 || currentMember[1].name.length < 4) {
-                errors.push('Tên phải có ít nhất 4 ký tự');
+                }
                 setToastVisible(true);
                 setToastContent(errors, 'error');
                 return;
@@ -124,12 +130,6 @@ const TournamentStatistic: FC<Props> = ({
                 setToastContent(errors, 'error');
                 return;
             }
-            if (currentMember[0].name.length < 6) {
-                errors.push('Tên phải có ít nhất 6 ký tự');
-                setToastVisible(true);
-                setToastContent(errors, 'error');
-                return;
-            }
         }
 
         // Check if the team exist in teamList
@@ -137,7 +137,7 @@ const TournamentStatistic: FC<Props> = ({
         const newMember = {
             name: '',
             phone: info.phone,
-            email: info.email,
+            yearOfBirth: info.yearOfBirth,
             created: new Date().getTime(),
             seedRank: 0,
         }
@@ -158,13 +158,13 @@ const TournamentStatistic: FC<Props> = ({
                 return
             }
 
-            registerNewMember(teamName, newMember).then(() => {
+            registerNewMember(teamName, newMember, symbol).then(() => {
                 clearAll();
                 setToastVisible(true);
                 setToastContent(['Đăng ký thành công'], 'success');
             })
         } else {
-            registerNewTeam(teamName, newMember).then(() => {
+            registerNewTeam(teamName, newMember, symbol).then(() => {
                 clearAll();
                 setToastVisible(true);
                 setToastContent(['Đăng ký thành công'], 'success');
@@ -172,11 +172,18 @@ const TournamentStatistic: FC<Props> = ({
         }
     }
 
-    const handleChangeTeam = (e: any) => {
-        setCurrentTeam({
-            ...currentTeam,
-            name: e.target.value,
-        })
+    const handleChangeTeam = (e: any, bol: number) => {
+        if (bol === 0) {
+            setCurrentTeam({
+                ...currentTeam,
+                name: e.target.value,
+            })
+        } else {
+            setCurrentTeam({
+                ...currentTeam,
+                symbol: e.target.value.toUpperCase(),
+            })
+        }
     }
 
     const handleChangeMember = (e: any, index: number) => {
@@ -186,13 +193,15 @@ const TournamentStatistic: FC<Props> = ({
     }
 
     const clearAll = () => {
-        setCurrentTeam({ ...initialTeam });
+        if (currentTab === 'all') {
+            setCurrentTeam({ ...initialTeam });
+        }
         setCurrentMember([
             { ...initialMember },
             { ...initialMember },
         ]);
         setInfo({
-            email: '',
+            yearOfBirth: null,
             phone: '',
         });
     }
@@ -260,7 +269,7 @@ const TournamentStatistic: FC<Props> = ({
     }
 
     return (
-        <StatisticStyled>
+        <StatisticStyled className='tambo-scrollbar'>
             <div className='header'>
                 <button onClick={() => navigate('/')} >
                     <div className='redirect'>
@@ -281,10 +290,15 @@ const TournamentStatistic: FC<Props> = ({
                         <h2 className="section-title">Ghi danh</h2>
                         <div className="info-field">
                             <div className="info-field__label">Đội</div>
-                            <div className="info-field__input">
+                            <div className="info-field__input info-field__input--team">
                                 <Input ref={teamNameRef}
                                     value={currentTab === 'all' ? currentTeam.name : currentTab}
-                                    onChange={handleChangeTeam}
+                                    onChange={(e) => handleChangeTeam(e, 0)}
+                                />
+                                <Input ref={teamSymbolRef}
+                                    maxLength={4}
+                                    value={currentTeam.symbol}
+                                    onChange={(e) => handleChangeTeam(e, 1)}
                                 />
                             </div>
                         </div>
@@ -306,12 +320,26 @@ const TournamentStatistic: FC<Props> = ({
                             </div>
                         </div>
                         <div className="info-field">
-                            <div className="info-field__label">E-mail</div>
-                            <div className="info-field__input"><Input value={info.email} name="email" onChange={onInfoChange} /></div>
+                            <div className="info-field__label">Năm Sinh</div>
+                            <div className="info-field__input">
+                                <Input
+                                    type='number'
+                                    value={info.yearOfBirth || ''}
+                                    name="yearOfBirth"
+                                    onChange={onInfoChange}
+                                />
+                            </div>
                         </div>
                         <div className="info-field">
                             <div className="info-field__label">Số điện thoại</div>
-                            <div className="info-field__input"><Input value={info.phone} type='number' name="phone" onChange={onInfoChange} /></div>
+                            <div className="info-field__input">
+                                <Input
+                                    value={info.phone}
+                                    type='number'
+                                    name="phone"
+                                    onChange={onInfoChange}
+                                />
+                            </div>
                         </div>
                         <div className="info-field info-field--submit">
                             <Button onClick={register}>Đăng ký</Button>
