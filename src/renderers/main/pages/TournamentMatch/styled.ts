@@ -52,7 +52,6 @@ export const ContentStyle = styled.div`
         position: relative;
         width: 296mm;
         height: 210mm;
-        margin-top: 12px;
     }
 
     @media print {

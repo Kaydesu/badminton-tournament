@@ -19,12 +19,12 @@ const columns = [
         dataIndex: 'team',
     },
     {
-        title: 'Sđt',
-        dataIndex: 'phone',
+        title: 'Năm sinh',
+        dataIndex: 'yearOfBirth',
     },
     {
-        title: 'Mail',
-        dataIndex: 'mail',
+        title: 'Sđt',
+        dataIndex: 'phone',
     },
     {
         title: 'Xếp loại',
@@ -41,7 +41,7 @@ type Props = {
 }
 
 const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRank, currentTab, setCurrentTab }) => {
-
+    console.log(competeTeams);
     useEffect(() => {
         if (currentTab !== 'all') {
             const index = competeTeams.findIndex(team => team.name === currentTab);
@@ -77,7 +77,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
             name: string;
             team: string;
             phone: string;
-            mail: string;
+            yearOfBirth: string;
             created: number;
             seedRank: number;
         }[] = [];
@@ -89,7 +89,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                         name: member.name,
                         team: team.name,
                         phone: member.phone,
-                        mail: member.email,
+                        yearOfBirth: member.yearOfBirth,
                         created: member.created,
                         seedRank: member.seedRank,
                     });
@@ -99,7 +99,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                             name: member.name,
                             team: team.name,
                             phone: member.phone,
-                            mail: member.email,
+                            yearOfBirth: member.yearOfBirth,
                             created: member.created,
                             seedRank: member.seedRank,
                         });

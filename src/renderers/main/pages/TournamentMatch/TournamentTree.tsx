@@ -113,7 +113,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
     useEffect(() => {
         if (participantList.left.length > 0 && participantList.right.length === 0) {
             const matchTemplates = calculatePlayoffs(participantList.left.length);
-            const width = 75 * containerRef.current.clientWidth / 100;
+            const width = 90 * containerRef.current.clientWidth / 100;
             const spacing = (containerRef.current.clientWidth - width) / 2;
 
             leftTree.current = new Tree(spacing, 0,
@@ -130,7 +130,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
             const leftTemplate = calculatePlayoffs(participantList.left.length)
 
             leftTree.current = new Tree(0, 0,
-                containerRef.current.clientWidth / 2 - 20,
+                containerRef.current.clientWidth / 2 - 5,
                 containerRef.current.clientHeight,
                 'toRight',
                 TournamentBracket.canvas
@@ -142,8 +142,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
 
             // Setup right tree
             const rightTemplate = calculatePlayoffs(participantList.right.length);
-            rightTree.current = new Tree(containerRef.current.clientWidth / 2 + 20, 0,
-                containerRef.current.clientWidth / 2 - 20,
+            rightTree.current = new Tree(containerRef.current.clientWidth / 2 + 5, 0,
+                containerRef.current.clientWidth / 2 - 5,
                 containerRef.current.clientHeight,
                 'toLeft',
                 TournamentBracket.canvas
@@ -176,6 +176,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
     }
 
     const getNodePosition = (tree: Tree, participants: CompeteMember[]) => {
+        participants = suffleList(participants)
         console.log('>>>>>>>> Participants: ', participants);
         const ballot = tree.generateBallots();
         const idList = participants.map((_, index) => index + 1)
@@ -265,7 +266,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                 }
             });
 
-            if (officialSlots.length > 2) {
+            if (officialSlots.length <= 2) {
                 const [ballot01, ballot02] = splitArray(officialSlots);
                 const [idList01, idList02] = splitArray(highRankSlots);
                 const [list01, list02] = splitArray(highRankList);
@@ -441,7 +442,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
         const total = participants.length;
         let spacing = 0;
         if (total < 12) {
-            const width = 75 * containerRef.current.clientWidth / 100;
+            const width = 90 * containerRef.current.clientWidth / 100;
             spacing = (containerRef.current.clientWidth - width) / 2;
         }
 
@@ -460,8 +461,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 1)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 1)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -474,8 +475,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[1], 1)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[1], 1)}`}
                         key={slot.picked[1]}
                     >
                         {slot.picked[1]}
@@ -491,8 +492,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: nodeWidth,
                             height: nodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 1)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 1)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -520,8 +521,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 2)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 2)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}
@@ -534,8 +535,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: playOffNodeWidth,
                             height: playOffNodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[1], 2)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[1], 2)}`}
                         key={slot.picked[1]}
                     >
                         {slot.picked[1]}
@@ -551,8 +552,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                             width: nodeWidth,
                             height: nodeHeight,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 2)}`}
+                        className="label"
+                        // className={`label ${getColorByName(slot.picked[0], 2)}`}
                         key={slot.picked[0]}
                     >
                         {slot.picked[0]}

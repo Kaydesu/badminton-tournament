@@ -1,7 +1,7 @@
 export interface CompeteMember {
     name: string;
     phone?: string;
-    email?: string;
+    yearOfBirth?: string;
     created: number;
     seedRank: number;
 }
