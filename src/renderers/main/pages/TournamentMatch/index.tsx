@@ -33,6 +33,56 @@ const TournamentMatch = () => {
         });
     }, []);
 
+    useEffect(() => {
+        if (tournament) {
+            if (tournament.menSingle.enabled) {
+                return setContent(() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 500);
+                    return Content.MAN_SINGLE
+                });
+            }
+            if (tournament.womenSingle.enabled) {
+                return setContent(() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 500);
+                    return Content.WOMAN_SINGLE
+                });
+            }
+            if (tournament.menDouble.enabled) {
+                return setContent(() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 500);
+                    return Content.MAN_DOUBLE
+                });
+            }
+            if (tournament.womenDouble.enabled) {
+                return setContent(() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 500);
+                    return Content.WOMAN_DOUBLE
+                });
+            }
+            if (tournament.mixedDouble.enabled) {
+                return setContent(() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 500);
+                    return Content.MIXED_DOUBLE
+                });
+            }
+        }
+    }, [tournament])
+
     const startRandom = () => {
         setDisabled(true);
         setStart(new Date().getTime());
@@ -75,19 +125,19 @@ const TournamentMatch = () => {
         let competeTeams: CompeteTeam[];
         switch (content) {
             case Content.MAN_SINGLE:
-                competeTeams = tournament.menSingle.teams;
+                competeTeams = JSON.parse(JSON.stringify(tournament.menSingle.teams));
                 break;
             case Content.MAN_DOUBLE:
-                competeTeams = tournament.menDouble.teams;
+                competeTeams = JSON.parse(JSON.stringify(tournament.menDouble.teams));
                 break;
             case Content.WOMAN_DOUBLE:
-                competeTeams = tournament.womenDouble.teams;
+                competeTeams = JSON.parse(JSON.stringify(tournament.womenDouble.teams));
                 break;
             case Content.WOMAN_SINGLE:
-                competeTeams = tournament.womenSingle.teams;
+                competeTeams = JSON.parse(JSON.stringify(tournament.womenSingle.teams));
                 break;
             case Content.MIXED_DOUBLE:
-                competeTeams = tournament.mixedDouble.teams;
+                competeTeams = JSON.parse(JSON.stringify(tournament.mixedDouble.teams));
                 break;
             default:
                 return [];

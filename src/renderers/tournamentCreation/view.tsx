@@ -92,10 +92,7 @@ const View = () => {
                 <div className="field-label">Nhóm tuổi</div>
                 <div className="field-input">
                     <Input
-                        max={22}
-                        min={16}
                         onChange={onChange}
-                        type='number'
                         name='age'
                         value={!newTournament.age ? '' : newTournament.age} />
                 </div>

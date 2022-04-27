@@ -37,6 +37,7 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
                     <thead>
                         <tr>
                             <th>Tên giải</th>
+                            <th>Độ tuổi</th>
                             <th>Chủ nhà</th>
                             <th>Đội tham gia</th>
                         </tr>
@@ -48,6 +49,11 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
                                     <td>
                                         <TournamentItem>
                                             <span>{item.name}</span>
+                                        </TournamentItem>
+                                    </td>
+                                    <td>
+                                        <TournamentItem>
+                                            <span>{item.age}</span>
                                         </TournamentItem>
                                     </td>
                                     <td>

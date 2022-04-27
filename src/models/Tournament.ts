@@ -31,8 +31,8 @@ export interface TournamentSchema {
 }
 
 export enum Content {
-    MAN_SINGLE = 'mainSingle',
-    MAN_DOUBLE = 'mainDouble',
+    MAN_SINGLE = 'manSingle',
+    MAN_DOUBLE = 'manDouble',
     WOMAN_SINGLE = 'womanSingle',
     WOMAN_DOUBLE = 'womanDouble',
     MIXED_DOUBLE = 'mixedDouble',

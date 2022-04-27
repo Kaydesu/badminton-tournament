@@ -29,29 +29,56 @@ const TournamentRegistration: FC = () => {
         setActiveContent(contentType);
     }
 
-    const handleActiveContent = (name: string, checked: boolean) => {
-        if (name === 'menSingle') {
-            return;
-        }
-
-        const newTournament = { ...tournament };
+    const handleActiveContent = (name: Content, checked: boolean) => {
+        // if (name === 'menSingle') {
+        //     return;
+        // }
+        const newTournament = JSON.parse(JSON.stringify(tournament)) as TournamentSchema;
         switch (name) {
-            case 'menSingle':
+            case Content.MAN_SINGLE:
                 newTournament.menSingle.enabled = checked;
                 break;
-            case 'womenSingle':
+            case Content.WOMAN_SINGLE:
                 newTournament.womenSingle.enabled = checked;
                 break;
-            case 'menDouble':
+            case Content.MAN_DOUBLE:
                 newTournament.menDouble.enabled = checked;
                 break;
-            case 'womenDouble':
+            case Content.WOMAN_DOUBLE:
                 newTournament.womenDouble.enabled = checked;
                 break;
-            case 'mixedDouble':
+            case Content.MIXED_DOUBLE:
                 newTournament.mixedDouble.enabled = checked;
                 break;
         }
+
+        if (!newTournament.menSingle.enabled &&
+            !newTournament.womenSingle.enabled &&
+            !newTournament.menDouble.enabled &&
+            !newTournament.womenDouble.enabled &&
+            !newTournament.mixedDouble.enabled) {
+            return;
+        }
+
+        if (name === activeContent && checked === false) {
+            // Active next available content:
+            if (newTournament.menSingle.enabled) {
+                setActiveContent(Content.MAN_SINGLE);
+            }
+            if (newTournament.womenSingle.enabled) {
+                setActiveContent(Content.WOMAN_SINGLE);
+            }
+            if (newTournament.menDouble.enabled) {
+                setActiveContent(Content.MAN_DOUBLE);
+            }
+            if (newTournament.womenDouble.enabled) {
+                setActiveContent(Content.WOMAN_DOUBLE);
+            }
+            if (newTournament.mixedDouble.enabled) {
+                setActiveContent(Content.MIXED_DOUBLE);
+            }
+        }
+
         updateTournament(newTournament);
     }
 

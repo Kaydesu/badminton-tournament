@@ -8,7 +8,7 @@ type Props = {
     tournament: TournamentSchema;
     activeTab: Content;
     changeActiveContent: (contentType: Content) => void;
-    handleActiveContent: (name: string, checked: boolean) => void;
+    handleActiveContent: (name: Content, checked: boolean) => void;
 }
 
 const SideBar: FC<Props> = ({
@@ -43,7 +43,7 @@ const SideBar: FC<Props> = ({
                         disabled={!getEnable(item.key)}
                     >
                         <Radio
-                            onClick={() => handleActiveContent(item.key, !getEnable(item.key))}
+                            onClick={() => handleActiveContent(item.content, !getEnable(item.key))}
                             checked={getEnable(item.key)}
                             name={item.key}
                         />

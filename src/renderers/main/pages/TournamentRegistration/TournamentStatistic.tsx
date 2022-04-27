@@ -137,7 +137,8 @@ const TournamentStatistic: FC<Props> = ({
         const newMember = {
             name: '',
             phone: info.phone,
-            yearOfBirth: info.yearOfBirth.toString(),
+            yearOfBirth: info.yearOfBirth ? info.yearOfBirth.toString() : '',
+            // yearOfBirth: info.yearOfBirth.toString(),
             created: new Date().getTime(),
             seedRank: 0,
         }
