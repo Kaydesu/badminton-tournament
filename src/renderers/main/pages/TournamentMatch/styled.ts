@@ -26,41 +26,48 @@ export const TournamentLayout = styled.div`
             }
         }
     }
-`
 
-export const ContentStyle = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: calc(100vh - 96px);
-    .title {
+    .container {
+        height: calc(100vh - 56px);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        .tournament-name {
-            margin-bottom: 0;
-            margin-right: 10px;
+        .tournament-bracket {
+            overflow: auto;
         }
-
-        .tambo-icon {
-            cursor: pointer;
+        .control-panel {
+            flex-grow: auto;
+            height: 100%;
+            box-shadow: 1px 1px 4px rgb(0 0 0 / 30%);
         }
     }
+`
 
-    .tournament-tree {
-        position: relative;
-        width: 296mm;
-        height: 210mm;
+export const PrintedContent = styled.div`
+     position: relative;
+    width: 210mm;
+    height: 296mm;
+    margin: 0 5px 40px 25px;
+    border: 1px solid #000;
+
+    .tournament-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 7mm 10mm 0 10mm;
+
+        >h2 {
+            margin: 0;
+        }
     }
 
     @media print {
-        .title {
+        position: fixed;
+        left: 0;
+        top: 0;
+        margin: 0;
+        border: none;
+
+        .tournament-info {
             font-family: 'Nunito' !important;
-            /* display: none; */
-            .tambo-icon {
-                display: none;
-            }
         }
     }
 `
@@ -145,6 +152,24 @@ export const ImageContainer = styled.div`
 
 export const pageStyle = `
     @page {
-        size: a4 landscape;
+        size: a4 portrait;
+    }
+`
+
+export const Pagination = styled.div`
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+
+    .branch {
+        margin: 0 12px;
+    }
+
+    .tambo-icon {
+        cursor: pointer;
+        &.toRight {
+            transform: rotate(180deg);
+        }
     }
 `

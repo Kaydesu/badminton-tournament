@@ -34,7 +34,7 @@ type Props = {
     registerNewMember: (name: string, member: CompeteMember, symbol?: string) => Promise<void>;
     registerNewTeam: (name: string, member: CompeteMember, symbol?: string) => Promise<void>;
     deleteMember: (name: string, team: string) => void;
-    handleUpdateRank: (memberName: string, teamName: string, dir: 'up' | 'down') => void;
+    handleUpdateRank: (memberName: string, teamName: string) => void;
 }
 
 const TournamentStatistic: FC<Props> = ({
@@ -140,7 +140,7 @@ const TournamentStatistic: FC<Props> = ({
             yearOfBirth: info.yearOfBirth ? info.yearOfBirth.toString() : '',
             // yearOfBirth: info.yearOfBirth.toString(),
             created: new Date().getTime(),
-            seedRank: 0,
+            seeded: false,
         }
 
         if (activeContent === Content.MAN_DOUBLE ||

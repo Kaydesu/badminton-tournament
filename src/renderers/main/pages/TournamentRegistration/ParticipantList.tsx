@@ -1,10 +1,9 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
-import { TableStyle, TableTabs } from './styled';
+import React, { FC, useEffect, useMemo } from 'react';
+import { TableStyle, TableTabs, TournamentListSummary } from './styled';
 import trashIcon from '../../../../assets/icons/trash.svg';
 import starIcon from '../../../../assets/icons/star.svg';
 import starGrey from '../../../../assets/icons/starGrey.svg';
-import starHalf from '../../../../assets/icons/starHalf.svg';
-import arrow from '../../../../assets/icons/arrow-up.svg';
+
 import Icon from '@components/Icon';
 import { CompeteTeam } from '@data/Tournament';
 
@@ -23,25 +22,20 @@ const columns = [
         dataIndex: 'yearOfBirth',
     },
     {
-        title: 'Sđt',
-        dataIndex: 'phone',
-    },
-    {
-        title: 'Xếp loại',
-        dataIndex: 'seedRank',
+        title: 'Hạt giống',
+        dataIndex: 'seeded',
     }
 ]
 
 type Props = {
     competeTeams: CompeteTeam[];
     handleDelete: (name: string, team: string) => void;
-    handleUpdateRank: (memberName: string, teamName: string, dir: 'up' | 'down') => void;
+    handleUpdateRank: (memberName: string, teamName: string) => void;
     currentTab: string;
     setCurrentTab: (e: string) => void;
 }
 
 const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRank, currentTab, setCurrentTab }) => {
-    console.log(competeTeams);
     useEffect(() => {
         if (currentTab !== 'all') {
             const index = competeTeams.findIndex(team => team.name === currentTab);
@@ -52,34 +46,13 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
     }, [competeTeams]);
 
     const rowData = useMemo(() => {
-
-        const renderSeedRank = (rank: number, key: string) => {
-            const arr = new Array(3).fill(0);
-
-            const getIcon = (index: number) => {
-                const sub = rank - index;
-                if (sub >= 0) {
-                    return starIcon;
-                } else if (sub >= -0.5 && sub < 0) {
-                    return starHalf;
-                } else {
-                    return starGrey;
-                }
-            }
-
-
-            return arr.map((_, index) => (
-                <Icon src={getIcon(index + 1)} key={`${key}-star-${index}`} />
-            ));
-        }
-
         const participants: {
             name: string;
             team: string;
             phone: string;
             yearOfBirth: string;
             created: number;
-            seedRank: number;
+            seeded: boolean;
         }[] = [];
 
         competeTeams.map((team) => {
@@ -91,7 +64,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                         phone: member.phone,
                         yearOfBirth: member.yearOfBirth,
                         created: member.created,
-                        seedRank: member.seedRank,
+                        seeded: member.seeded,
                     });
                 } else {
                     if (team.name === currentTab) {
@@ -101,16 +74,14 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                             phone: member.phone,
                             yearOfBirth: member.yearOfBirth,
                             created: member.created,
-                            seedRank: member.seedRank,
+                            seeded: member.seeded,
                         });
                     }
                 }
             })
         });
 
-        participants.sort((a, b) =>
-            (b.seedRank - a.seedRank) === 0 ? a.created - b.created : b.seedRank - a.seedRank
-        );
+        participants.sort((a, b) => a.created - b.created);
 
         return participants.map((member: any, index) => (
             <tr key={member.name + index}>
@@ -118,11 +89,11 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                     columns.map((col, i) => (
                         <td key={`${member[col.dataIndex]}-${i}-${index}`}>
                             {
-                                col.dataIndex !== 'seedRank' ? (
+                                col.dataIndex !== 'seeded' ? (
                                     <div>{member[col.dataIndex]}</div>
                                 ) : (
-                                    <div className='seed-rank'>
-                                        {renderSeedRank(member[col.dataIndex], `${member[col.dataIndex]}-${i}-${index}`)}
+                                    <div className='seed-rank' onClick={() => handleUpdateRank(member.name, member.team)}>
+                                        <Icon src={member['seeded'] ? starIcon : starGrey} />
                                     </div>
                                 )
                             }
@@ -131,15 +102,6 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                 }
                 <td>
                     <div className='action'>
-                        <Icon
-                            onClick={() => handleUpdateRank(member.name, member.team, 'up')}
-                            src={arrow}
-                        />
-                        <Icon
-                            onClick={() => handleUpdateRank(member.name, member.team, 'down')}
-                            src={arrow}
-                            className='down'
-                        />
                         <Icon
                             onClick={() => handleDelete(member.name, member.team)}
                             src={trashIcon}
@@ -175,8 +137,8 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
     }, [competeTeams, currentTab]);
 
     return (
-        <>
-            <TableTabs>{tabs}</TableTabs>
+        <TournamentListSummary>
+            <TableTabs className='tambo-scrollbar'>{tabs}</TableTabs>
             <TableStyle>
                 <table className='table-header'>
                     <colgroup>
@@ -206,7 +168,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                     </table>
                 </div>
             </TableStyle>
-        </>
+        </TournamentListSummary>
     )
 }
 

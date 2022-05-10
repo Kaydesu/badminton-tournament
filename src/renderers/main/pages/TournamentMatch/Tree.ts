@@ -1,4 +1,5 @@
-import { nodeHeight, nodeWidth, playOffNodeHeight, playOffNodeWidth } from "@utils/constants";
+import { playOffNodeHeight, playOffNodeWidth } from "@utils/constants";
+import { isOdd } from "@utils/math";
 
 class TournamentBracket {
     private _canvas: HTMLCanvasElement;
@@ -38,6 +39,8 @@ export class Tree {
     private _position: { x: number; y: number };
     private _size: { width: number; height: number };
     private _from: number;
+    private _nodeSize: { width: number; height: number };
+    private _playOffNodeSize: { width: number; height: number };
 
     constructor(
         x: number,
@@ -45,7 +48,9 @@ export class Tree {
         width: number,
         height: number,
         direction: 'toRight' | 'toLeft',
-        canvas: HTMLCanvasElement
+        canvas: HTMLCanvasElement,
+        nodeSize: { width: number; height: number; },
+        playOffNodeSize: { width: number; height: number },
     ) {
         this._position = { x, y };
         this._size = { width, height };
@@ -54,6 +59,8 @@ export class Tree {
         this._levels = [];
         this._playoff = new Map;
         this._from = 1;
+        this._nodeSize = nodeSize;
+        this._playOffNodeSize = playOffNodeSize;
     }
 
     getTotalPlayoffs() {
@@ -82,7 +89,7 @@ export class Tree {
             const arr = new Array(Math.floor(i)).fill(0);
             const nodes = new Map();
             arr.map((_, index) => {
-                const newNode = new Node(0, 0, nodeWidth, nodeHeight);
+                const newNode = new Node(0, 0, this._nodeSize.width, this._nodeSize.height);
                 if (level > 0) {
                     const added = index + 1;
                     this._levels[level - 1].get(index + added).converge(newNode);
@@ -97,19 +104,39 @@ export class Tree {
 
     createPlayOff(total: number) {
         let count = 0;
-        this._levels[0].forEach((node, to) => {
-            if (count < total) {
-                const athlete01 = new Node(0, 0, playOffNodeWidth, playOffNodeHeight);
-                const athlete02 = new Node(0, 0, playOffNodeWidth, playOffNodeHeight);
-                athlete01.converge(node);
-                athlete02.converge(node);
-                this._playoff.set(to, {
-                    athlete01,
-                    athlete02
-                });
-            }
-            count++;
-        });
+        if (this._levels[0].size < 12) {
+            this._levels[0].forEach((node, to) => {
+                if (count < total) {
+                    const athlete01 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
+                    const athlete02 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
+                    athlete01.converge(node);
+                    athlete02.converge(node);
+                    this._playoff.set(to, {
+                        athlete01,
+                        athlete02
+                    });
+                }
+                count++;
+            });
+        } else {
+            console.log('>>>>>>create playoffs');
+            this._levels[0].forEach((node, to) => {
+                if (count < total) {
+                    if (!isOdd(to)) {
+                        console.log(to);
+                        const athlete01 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
+                        const athlete02 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
+                        athlete01.converge(node);
+                        athlete02.converge(node);
+                        this._playoff.set(to, {
+                            athlete01,
+                            athlete02
+                        });
+                        count++;
+                    }
+                }
+            });
+        }
     }
 
     render() {
@@ -137,7 +164,7 @@ export class Tree {
                     const average = (middlePoint02.y + middlePoint01.y) / 2;
                     node.position({
                         x: node.position().x,
-                        y: average - nodeHeight / 2,
+                        y: average - this._nodeSize.height / 2,
                     })
                 }
                 this.drawNode(node);
@@ -219,13 +246,13 @@ export class Tree {
 
     private distributeVertical() {
         const totalCount = this._levels[0].size;
-        const totalHeight = nodeHeight * totalCount;
+        const totalHeight = this._nodeSize.height * totalCount;
         const spacing = ((this._size.height - totalHeight) / (totalCount - 1));
         this._levels[0].forEach((node, key) => {
             const index = key - this._from;
             node.position({
                 ...node.position(),
-                y: (nodeHeight + spacing) * index,
+                y: (this._nodeSize.height + spacing) * index,
             })
         });
 
@@ -236,7 +263,7 @@ export class Tree {
                 const averageY = (out1.y + out2.y) / 2;
                 node.position({
                     ...node.position(),
-                    y: averageY - nodeHeight / 2,
+                    y: averageY - this._nodeSize.height / 2,
                 })
             });
         }
@@ -246,18 +273,18 @@ export class Tree {
         this._playoff.forEach((playoff, key) => {
             if (key === this._from) {
                 const firstSlot = { x: 0, y: 0 };
-                const secondSlot = { x: 0, y: (playOffNodeHeight + 10) };
+                const secondSlot = { x: 0, y: (this._playOffNodeSize.height + 10) };
                 playoff.athlete01.position(firstSlot);
                 playoff.athlete02.position(secondSlot);
             } else if (key === this._levels[0].size) {
-                const secondSlot = { x: 0, y: this._size.height - playOffNodeHeight };
-                const firstSlot = { x: 0, y: secondSlot.y - (playOffNodeHeight + 10) };
+                const secondSlot = { x: 0, y: this._size.height - this._playOffNodeSize.height };
+                const firstSlot = { x: 0, y: secondSlot.y - (this._playOffNodeSize.height + 10) };
                 playoff.athlete01.position(firstSlot);
                 playoff.athlete02.position(secondSlot);
             } else {
                 const middlePoint = playoff.athlete01.child.in;
-                const firstSlot = { x: 0, y: middlePoint.y - 5 - playOffNodeHeight };
-                const secondSlot = { x: 0, y: firstSlot.y + (playOffNodeHeight + 10) };
+                const firstSlot = { x: 0, y: middlePoint.y - 5 - this._playOffNodeSize.height };
+                const secondSlot = { x: 0, y: firstSlot.y + (this._playOffNodeSize.height + 10) };
                 playoff.athlete01.position(firstSlot);
                 playoff.athlete02.position(secondSlot);
             }
@@ -266,25 +293,25 @@ export class Tree {
 
     private distributeHorizontal() {
         if (this._playoff.size === 0) {
-            const totalWidth = nodeWidth * this._levels.length;
+            const totalWidth = this._nodeSize.width * this._levels.length;
             const spacing = (this._size.width - totalWidth) / (this._levels.length - 1);
             this._levels.map((level, index) => {
                 level.forEach(node => {
                     node.position({
                         ...node.position(),
-                        x: (nodeWidth + spacing) * index,
+                        x: (this._nodeSize.width + spacing) * index,
                     })
                 })
             });
         } else {
-            const totalWidth = nodeWidth * this._levels.length;
+            const totalWidth = this._nodeSize.width * this._levels.length;
 
             const spacing = (this._size.width - 150 - totalWidth) / (this._levels.length - 1);
             this._levels.map((level, index) => {
                 level.forEach(node => {
                     node.position({
                         ...node.position(),
-                        x: index === 0 ? 150 : (nodeWidth + spacing) * index + 150,
+                        x: index === 0 ? 150 : (this._nodeSize.width + spacing) * index + 150,
                     })
                 })
             });

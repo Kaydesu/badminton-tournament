@@ -5,6 +5,7 @@ import SideBar from './SideBar';
 import { Container } from './styled';
 import TournamentStatistic from './TournamentStatistic';
 import { RadioChangeEvent, Spin } from 'antd';
+import { useToastAction } from '@components/Toast';
 
 const { fetch, save } = window.Api;
 
@@ -12,7 +13,7 @@ const TournamentRegistration: FC = () => {
 
     const match = useParams<{ id: string }>();
     const [activeContent, setActiveContent] = useState<Content>(Content.MAN_SINGLE);
-
+    const { setToastVisible, setToastContent } = useToastAction();
     const [tournament, setTournament] = useState<TournamentSchema>(null);
 
     useEffect(() => {
@@ -161,21 +162,26 @@ const TournamentRegistration: FC = () => {
         }
     }
 
-    const updateRank = (name: string, teamName: string, dir: 'up' | 'down') => {
+    const updateRank = (name: string, teamName: string) => {
         const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
         const team = temp.find(item => item.name === teamName);
         const member = team.members.find(item => item.name === name);
-        if (member.seedRank === 3 && dir === 'up') {
+        member.seeded = !member.seeded;
+        let totalSeeded = 0;
+        temp.map(team => {
+            team.members.map(member => {
+                if(member.seeded) {
+                    totalSeeded ++;
+                }
+            })
+        });
+
+        if(totalSeeded > 4) {
+            setToastVisible(true);
+            setToastContent(['Chỉ được đăng ký tối đa 4 hạt giống'], 'error');
             return;
         }
-        if (member.seedRank === 0 && dir === 'down') {
-            return;
-        }
-        if (dir === 'up') {
-            member.seedRank += 0.5;
-        } else {
-            member.seedRank -= 0.5;
-        }
+
         const newTournament = setCompeteTeam(temp);
         updateTournament(newTournament);
     }

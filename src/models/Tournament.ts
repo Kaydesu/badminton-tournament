@@ -3,7 +3,7 @@ export interface CompeteMember {
     phone?: string;
     yearOfBirth?: string;
     created: number;
-    seedRank: number;
+    seeded: boolean;
 }
 
 export interface CompeteTeam {

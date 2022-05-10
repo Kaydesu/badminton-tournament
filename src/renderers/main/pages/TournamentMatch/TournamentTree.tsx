@@ -2,14 +2,16 @@ import { CompeteMember } from '@data/Tournament';
 import { nodeHeight, nodeWidth, playOffNodeHeight, playOffNodeWidth } from '@utils/constants';
 import { generateRandom, getBaseLog, isOdd, splitArray, suffleList } from '@utils/math';
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
-// import { Stage, Layer } from 'react-konva';
-import { ImageContainer, NameContainer, TreeContainer } from './styled';
+import { ImageContainer, NameContainer, Pagination, TreeContainer } from './styled';
 import TournamentBracket, { Tree } from './Tree';
+import caretLine from '../../../../assets/icons/caret-line.svg';
+import Icon from '@components/Icon';
 
 type Props = {
     participants: CompeteMember[];
     start: number;
     enableButtons: () => void;
+    leftOnly: boolean;
 }
 
 interface Slot {
@@ -17,7 +19,9 @@ interface Slot {
     picked: string[];
 }
 
-const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
+const TournamentTree: FC<Props> = ({ participants, start, enableButtons, leftOnly }) => {
+
+    console.log('>>>>24 ', participants);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const [matchBase64, setMatchBase64] = useState(null);
@@ -61,10 +65,19 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
 
 
     useEffect(() => {
-        if (participants.length >= 12) {
+        if (participants.length > 0 && participants.length < 12) {
+            const suffled = suffleList(participants);
+            setParticipantList({
+                left: suffled,
+                right: [],
+            });
+
+            setTopTiers({
+                first: [participants[0].name, participants[1].name],
+                second: []
+            });
+        } else if (participants.length >= 12 && !leftOnly) {
             const splitted = splitArray(suffleList(participants));
-            console.log(suffleList(splitted[0]));
-            console.log(suffleList(splitted[1]));
 
             setParticipantList({
                 left: splitted[0],
@@ -75,7 +88,8 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                 first: [splitted[0][0].name, splitted[1][0].name],
                 second: [splitted[0][1].name, splitted[1][1].name]
             });
-        } else if (participants.length > 0 && participants.length < 12) {
+        }
+        else if (participants.length >= 12 && leftOnly) {
             const suffled = suffleList(participants);
             setParticipantList({
                 left: suffled,
@@ -109,18 +123,26 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
         }
     }, [start]);
 
-
     useEffect(() => {
+        let height = 0;
+        if (participantList.left.length > 15) {
+            height = nodeHeight - 10;
+        } else {
+            height = nodeHeight;
+        }
+
         if (participantList.left.length > 0 && participantList.right.length === 0) {
             const matchTemplates = calculatePlayoffs(participantList.left.length);
-            const width = 90 * containerRef.current.clientWidth / 100;
+            const width = containerRef.current.clientWidth;
             const spacing = (containerRef.current.clientWidth - width) / 2;
-
+            
             leftTree.current = new Tree(spacing, 0,
                 width,
                 containerRef.current.clientHeight,
                 'toRight',
-                TournamentBracket.canvas
+                TournamentBracket.canvas,
+                { width: nodeWidth, height },
+                { width: playOffNodeWidth, height},
             );
             leftTree.current.createLevels(matchTemplates.nodes);
             leftTree.current.createPlayOff(matchTemplates.playOffs)
@@ -133,7 +155,9 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                 containerRef.current.clientWidth / 2 - 5,
                 containerRef.current.clientHeight,
                 'toRight',
-                TournamentBracket.canvas
+                TournamentBracket.canvas,
+                { width: nodeWidth, height },
+                { width: playOffNodeWidth, height },
             );
 
             leftTree.current.createLevels(leftTemplate.nodes);
@@ -146,7 +170,9 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                 containerRef.current.clientWidth / 2 - 5,
                 containerRef.current.clientHeight,
                 'toLeft',
-                TournamentBracket.canvas
+                TournamentBracket.canvas,
+                { width: nodeWidth, height },
+                { width: playOffNodeWidth, height },
             );
 
             rightTree.current.createLevels(rightTemplate.nodes);
@@ -186,7 +212,6 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
         });
         if (tree.getTotalPlayoffs() > 0) participants = suffleList(participants);
         const idList = participants.map((_, index) => index + 1)
-        console.log(participants);
         const list = participants.map((item) => ({
             name: item.name,
             slot: 0,
@@ -274,132 +299,193 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
                 }
             });
 
-            // if (officialSlots.length <= 2) {
-            const [ballot01, ballot02] = splitArray(officialSlots);
-            const [idList01, idList02] = splitArray(highRankSlots);
-            const [list01, list02] = splitArray(highRankList);
-            let exclude: number[] = [];
-            let min = idList01[0];
-            let max = idList01[idList01.length - 1];
+            if (officialSlots.length <= 2) {
+                const [ballot01, ballot02] = splitArray(officialSlots);
+                const [idList01, idList02] = splitArray(highRankSlots);
+                const [list01, list02] = splitArray(highRankList);
+                let exclude: number[] = [];
+                let min = idList01[0];
+                let max = idList01[idList01.length - 1];
 
-            ballot01.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    const randomIndex = generateRandom(min, max, exclude);
-                    pick.push({
-                        index: key,
-                        picked: [list01[randomIndex - 1].name],
-                    });
-                    exclude.push(randomIndex);
+                ballot01.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (!node.hasParents) {
+                        const randomIndex = generateRandom(min, max, exclude);
+                        pick.push({
+                            index: key,
+                            picked: [list01[randomIndex - 1].name],
+                        });
+                        exclude.push(randomIndex);
+                    }
+                });
+                exclude = [];
+                min = 0;
+                max = list02.length - 1;
+
+                ballot02.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (!node.hasParents) {
+                        const randomIndex = generateRandom(min, max, exclude);
+                        pick.push({
+                            index: key,
+                            picked: [list02[randomIndex].name],
+                        });
+                        exclude.push(randomIndex);
+                    }
+                });
+
+                exclude = [...highRankSlots];
+                let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
+                let playOffIds = idList.filter(id => !highRankSlots.includes(id));
+
+                min = playOffIds[0];
+                max = playOffIds[playOffIds.length - 1];
+                playOffBallots.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (node.hasParents) {
+                        let picked = [];
+                        let randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        pick.push({
+                            index: key,
+                            picked,
+                        })
+                    }
+                });
+            } else {
+                // Just like case 0 playoffs:
+                const [ballot01, ballot02] = splitArray(ballot);
+                let [list01, list02] = splitArray(list);
+                let exclude: number[] = [];
+
+
+                let totalPlayer = 0;
+                for (let i = 0; i < ballot01.length; i++) {
+                    if (i < tree.getTotalPlayoffs()) {
+                        console.log(' double this slot', i);
+                        totalPlayer += 2;
+                    } else {
+                        console.log("single this slot", i);
+                        totalPlayer += 1;
+                    }
                 }
-            });
-            exclude = [];
-            min = 0;
-            max = list02.length - 1;
-
-            ballot02.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    const randomIndex = generateRandom(min, max, exclude);
-                    pick.push({
-                        index: key,
-                        picked: [list02[randomIndex].name],
-                    });
-                    exclude.push(randomIndex);
+                const missing = totalPlayer - list01.length;
+                console.log('>>>>> list01: ', list01.length);
+                console.log('>>>> list02: ', list02.length);
+                for (let i = 0; i < missing; i++) {
+                    let adjust = list02.splice(list02.length - 1, 1);
+                    list01 = list01.concat(adjust);
+                    console.log(adjust);
                 }
-            });
 
-            exclude = [...highRankSlots];
-            let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
-            let playOffIds = idList.filter(id => !highRankSlots.includes(id));
+                const idList01 = list01.map((_, index) => index + 1);
+                const idList02 = list02.map((_, index) => index + 1);
 
-            min = playOffIds[0];
-            max = playOffIds[playOffIds.length - 1];
-            playOffBallots.map((key, index) => {
-                const node = tree.getNode(key);
-                if (node.hasParents) {
-                    let picked = [];
-                    let randomIndex = generateRandom(min, max, exclude);
-                    picked.push(list[randomIndex - 1].name);
-                    exclude.push(randomIndex);
+                let min = idList01[0];
+                let max = idList01[idList01.length - 1];
 
-                    randomIndex = generateRandom(min, max, exclude);
-                    picked.push(list[randomIndex - 1].name);
-                    exclude.push(randomIndex);
+                console.log(idList01, idList02);
 
-                    pick.push({
-                        index: key,
-                        picked,
-                    })
-                }
-            });
-            // } else {
-            // Just like case 0 playoffs:
-            //     const [ballot01, ballot02] = splitArray(officialSlots);
-            //     const [idList01, idList02] = splitArray(highRankSlots);
-            //     const [list01, list02] = splitArray(highRankList);
-            //     let exclude: number[] = [];
-            //     let min = idList01[0];
-            //     let max = idList01[idList01.length - 1];
+                console.log('>>>>> list01: ', list01.length);
+                console.log('>>>> list02: ', list02.length);
+                // console.log('ballot: ', ballot01, ballot02);
+                // console.log('min - max: ', min, max);
+                ballot01.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (!node.hasParents) {
+                        console.log(exclude, key);
+                        const randomIndex = generateRandom(min, max, exclude);
+                        console.log(randomIndex, key);
+                        exclude.push(randomIndex);
+                        pick.push({
+                            index: key,
+                            picked: [list01[randomIndex - 1].name],
+                        });
+                    } else {
+                        console.log(exclude, key);
+                        let picked = [];
+                        let randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list01[randomIndex - 1].name);
+                        exclude.push(randomIndex);
 
-            //     console.log('>>>>> list01: ', list01);
-            //     console.log('>>>> list02: ', list02);
-            //     // console.log('ballot: ', ballot01, ballot02);
-            //     console.log('>>asdfasdf', highRankList);
-            //     ballot01.map((key, index) => {
-            //         const node = tree.getNode(key);
-            //         if (!node.hasParents) {
-            //             const randomIndex = generateRandom(min, max, exclude);
-            //             pick.push({
-            //                 index: key,
-            //                 picked: [list01[randomIndex - 1].name],
-            //             });
-            //             exclude.push(randomIndex);
-            //         }
-            //     });
-            //     exclude = [];
-            //     ballot02.map((key, index) => {
-            //         const node = tree.getNode(key);
-            //         if (!node.hasParents) {
-            //             const randomIndex = generateRandom(min, max, exclude);
-            //             pick.push({
-            //                 index: key,
-            //                 picked: [list02[randomIndex - 1].name],
-            //             });
-            //             exclude.push(randomIndex);
-            //         }
-            //     });
+                        randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list01[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        pick.push({
+                            index: key,
+                            picked,
+                        })
+                    }
+                })
+
+                exclude = [];
+
+                min = idList02[0];
+                max = idList02[idList02.length - 1];
+
+                ballot02.map((key, index) => {
+                    const node = tree.getNode(key);
+                    if (!node.hasParents) {
+                        const randomIndex = generateRandom(min, max, exclude);
+                        pick.push({
+                            index: key,
+                            picked: [list02[randomIndex - 1].name],
+                        });
+                        exclude.push(randomIndex);
+                    } else {
+                        let picked = [];
+                        let randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list02[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        randomIndex = generateRandom(min, max, exclude);
+                        picked.push(list02[randomIndex - 1].name);
+                        exclude.push(randomIndex);
+
+                        pick.push({
+                            index: key,
+                            picked,
+                        })
+                    }
+                });
 
 
-            //     let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
-            //     let playOffIds = idList.filter(id => !highRankSlots.includes(id));
-            //     min = playOffIds[0];
-            //     max = playOffIds[playOffIds.length - 1];
+                // let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
+                // let playOffIds = idList.filter(id => !highRankSlots.includes(id));
+                // min = playOffIds[0];
+                // max = playOffIds[playOffIds.length - 1];
 
-            //     // console.log('>>>> exclude', exclude);
-            //     console.log(">>>> After first round: ", pick);
-            //     // console.log('>>>>> Playoff ballots: ', playOffBallots);
-            //     // console.log('>>>>> Playoff id: ', playOffIds);
+                // // console.log('>>>> exclude', exclude);
+                // console.log(">>>> After first round: ", pick);
+                // // console.log('>>>>> Playoff ballots: ', playOffBallots);
+                // // console.log('>>>>> Playoff id: ', playOffIds);
 
-            //     playOffBallots.map((key, index) => {
-            //         const node = tree.getNode(key);
-            //         if (node.hasParents) {
-            //             let picked = [];
-            //             let randomIndex = generateRandom(min, max, exclude);
-            //             picked.push(list[randomIndex - 1].name);
-            //             exclude.push(randomIndex);
+                // playOffBallots.map((key, index) => {
+                //     const node = tree.getNode(key);
+                //     if (node.hasParents) {
+                //         let picked = [];
+                //         let randomIndex = generateRandom(min, max, exclude);
+                //         picked.push(list[randomIndex - 1].name);
+                //         exclude.push(randomIndex);
 
-            //             randomIndex = generateRandom(min, max, exclude);
-            //             picked.push(list[randomIndex - 1].name);
-            //             exclude.push(randomIndex);
+                //         randomIndex = generateRandom(min, max, exclude);
+                //         picked.push(list[randomIndex - 1].name);
+                //         exclude.push(randomIndex);
 
-            //             pick.push({
-            //                 index: key,
-            //                 picked,
-            //             })
-            //         }
-            //     });
-            // }
+                //         pick.push({
+                //             index: key,
+                //             picked,
+                //         })
+                //     }
+                // });
+            }
         }
         return pick;
     }
@@ -452,7 +538,7 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons }) => {
         const total = participants.length;
         let spacing = 0;
         if (total < 12) {
-            const width = 90 * containerRef.current.clientWidth / 100;
+            const width = containerRef.current.clientWidth;
             spacing = (containerRef.current.clientWidth - width) / 2;
         }
 

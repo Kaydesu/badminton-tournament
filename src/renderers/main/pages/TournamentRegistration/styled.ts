@@ -169,8 +169,8 @@ export const StatisticLayout = styled.div`
 `
 
 export const TableTabs = styled.div`
-    padding-left: 12px;
-    display: flex;
+    height: 350px;
+    overflow: hidden auto;
     .tab-item {
         display: flex;
         align-items: center;
@@ -178,10 +178,8 @@ export const TableTabs = styled.div`
         cursor: pointer;
         width: 142px;
         height: 40px;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
         &.active {
-            background-color: #EBEFF0;
+            box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
         }
     }
 `
@@ -230,6 +228,7 @@ export const TableStyle = styled.div`
 
                     &.seed-rank {
                         display: flex;
+                        cursor: pointer;
                         .tambo-icon {
                             font-size: 18px;
                         }
@@ -239,3 +238,7 @@ export const TableStyle = styled.div`
         }
     }
 `;
+
+export const TournamentListSummary = styled.div`
+    display: flex;
+`

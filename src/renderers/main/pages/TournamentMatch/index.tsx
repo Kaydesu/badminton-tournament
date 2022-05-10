@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ContentStyle, pageStyle, TournamentLayout } from './styled';
+import { pageStyle, PrintedContent, TournamentLayout } from './styled';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '@components/Icon';
 import Button from '@components/Button';
 import { CompeteMember, CompeteTeam, Content, TournamentSchema } from '@data/Tournament';
-import { Dropdown, Menu, Spin } from 'antd';
+import { Menu, Spin } from 'antd';
 import caretLine from '../../../../assets/icons/caret-line.svg';
-import caretDown from '../../../../assets/icons/caret-down.svg';
 import { contentList } from '@utils/constants';
 import TournamentTree from './TournamentTree';
 import { useReactToPrint } from 'react-to-print';
+import { splitArray, suffleList } from '@utils/math';
 
 
 const { fetch } = window.Api;
@@ -26,6 +26,10 @@ const TournamentMatch = () => {
     const [start, setStart] = useState<number>(null);
     const [disabled, setDisabled] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [pagination, setPagination] = useState(() => ({
+        current: 1,
+        total: 1
+    }));
 
     useEffect(() => {
         fetch<TournamentSchema>('TOURNAMENTS', match.id).then((response) => {
@@ -142,6 +146,7 @@ const TournamentMatch = () => {
             default:
                 return [];
         }
+
         const members: CompeteMember[] = [];
         competeTeams.map((team) => {
             team.members.map(member => {
@@ -149,21 +154,31 @@ const TournamentMatch = () => {
                 members.push(member);
             })
         });
-        members.sort((a, b) =>
-            (b.seedRank - a.seedRank) === 0 ? a.created - b.created : b.seedRank - a.seedRank
-        );
-        return members;
-    }, [content, tournament]);
+        members.sort((a, b) => a.created - b.created);
+
+        setPagination({
+            ...pagination,
+            total: members.length > 20 ? 2 : 1,
+        })
+
+        if (members.length > 20) {
+            const splitted = splitArray(suffleList(members));
+            return [splitted[pagination.current - 1], true];
+        }
+
+        return [members, false];
+    }, [content, tournament, pagination.current]);
 
     const tree = useMemo(() => {
         return (
             <TournamentTree
+                leftOnly={participants[1] as boolean}
                 start={start}
-                participants={participants}
+                participants={participants[0] as any[]}
                 enableButtons={() => setDisabled(false)}
             />
         )
-    }, [participants, start]);
+    }, [participants, start, pagination.total]);
 
     const contentOption = useMemo(() => {
         const temp = { ...tournament } as any;
@@ -193,6 +208,28 @@ const TournamentMatch = () => {
     }, [content, tournament]);
 
 
+    const backward = () => {
+        setPagination({
+            ...pagination,
+            current: pagination.current - 1,
+        });
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+        }, 500);
+    }
+
+    const foward = () => {
+        setPagination({
+            ...pagination,
+            current: pagination.current + 1,
+        });
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+        }, 500);
+    }
+
     return (
         <TournamentLayout>
             <div className="header">
@@ -205,12 +242,6 @@ const TournamentMatch = () => {
                 <div className="action">
                     <Button
                         className={disabled ? 'disabled' : ''}
-                        onClick={startRandom}
-                    >
-                        Bắt đầu
-                    </Button>
-                    <Button
-                        className={disabled ? 'disabled' : ''}
                         onClick={printMatch}
                         buttonType='secondary'
                     >
@@ -218,19 +249,19 @@ const TournamentMatch = () => {
                     </Button>
                 </div>
             </div>
-            {
-                tournament ? (
-                    <ContentStyle className="content sheet padding-10mm" ref={printRef}>
-                        <div className="title">
-                            <Dropdown overlay={contentOption} >
-                                <h2 className='tournament-name'>{tournament.name} - {contentText}</h2>
-                            </Dropdown>
-                            <Icon src={caretDown} />
+            {tournament ?
+                (
+                    <div className="container">
+                        <div className="tournament-bracket tambo-scrollbar">
+                            <PrintedContent className="tournament-tree" id="tournament-tree-container" ref={printRef}>
+                                <div className="tournament-info">
+                                    <h2 className='tournament-name'>{tournament.name} ({tournament.age}) - {contentText}</h2>
+                                    <div className="branch-number">Nhánh: 1</div>
+                                </div>
+                            </PrintedContent>
                         </div>
-                        <div className="tournament-tree" id="tournament-tree-container">
-                            {!loading && tree}
-                        </div>
-                    </ContentStyle>
+                        <div className="contron-panel"></div>
+                    </div>
                 ) : (
                     <div className="loading">
                         <Spin size='large' spinning />
