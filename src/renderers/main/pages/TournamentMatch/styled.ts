@@ -42,11 +42,13 @@ export const TournamentLayout = styled.div`
 `
 
 export const PrintedContent = styled.div`
-     position: relative;
+    position: relative;
     width: 210mm;
     height: 296mm;
     margin: 0 5px 40px 25px;
     border: 1px solid #000;
+    display: flex;
+    flex-direction: column;
 
     .tournament-info {
         display: flex;
@@ -73,8 +75,13 @@ export const PrintedContent = styled.div`
 `
 
 export const TreeContainer = styled.div`
-    width: 100%;
-    height: 100%;
+    flex-grow: 1;
+    position: relative;
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
     @media print {
         position: fixed;
         top: 2.5cm;
@@ -110,23 +117,14 @@ export const NameContainer = styled.div`
     width: 100%;
     height: 100%;
 
-    .label {
+    .match-id {
         position: absolute;
-        font-weight: 500;
-        color: #403f6e;
-        background-color: #c8d3d5;
-        padding: 4px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        text-align: center;
-
-        &.red {
-            color: red;
-        }
-
-        &.blue {
-            color: blue;
+        transform: translate(-120%, -50%);
+        transition: all 0.3s ease-in;
+        &.valid {
+            color: #1d36e9;
+            font-weight: 500;
+            font-size: 18px;
         }
     }
 `

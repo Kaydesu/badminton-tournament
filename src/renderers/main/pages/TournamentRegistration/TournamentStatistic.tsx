@@ -266,7 +266,9 @@ const TournamentStatistic: FC<Props> = ({
             return
         }
 
-        navigate(`/tournament/match/${tournament.id}`);
+        navigate(`/tournament/match/${tournament.id}`, {
+            state: activeContent,
+        });
     }
 
     return (

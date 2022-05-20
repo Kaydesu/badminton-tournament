@@ -1,17 +1,15 @@
-import { CompeteMember } from '@data/Tournament';
-import { nodeHeight, nodeWidth, playOffNodeHeight, playOffNodeWidth } from '@utils/constants';
-import { generateRandom, getBaseLog, isOdd, splitArray, suffleList } from '@utils/math';
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { CompeteMember } from '@data/Tournament';
+import { formatNumber, paddingLeft, paddingTop } from '@utils/constants';
+import { generateRandom, getBaseLog, isOdd, splitArray, suffleList } from '@utils/math';
 import { ImageContainer, NameContainer, Pagination, TreeContainer } from './styled';
-import TournamentBracket, { Tree } from './Tree';
+import TournamentBracket from './Tree';
 import caretLine from '../../../../assets/icons/caret-line.svg';
 import Icon from '@components/Icon';
 
 type Props = {
     participants: CompeteMember[];
     start: number;
-    enableButtons: () => void;
-    leftOnly: boolean;
 }
 
 interface Slot {
@@ -19,87 +17,37 @@ interface Slot {
     picked: string[];
 }
 
-const TournamentTree: FC<Props> = ({ participants, start, enableButtons, leftOnly }) => {
-
-    console.log('>>>>24 ', participants);
-
+const TournamentTree: FC<Props> = ({ participants, start }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [matchBase64, setMatchBase64] = useState(null);
-    const [stageSize, setStageSize] = useState<{ width: number; height: number }>({
-        width: 0,
-        height: 0,
-    });
-
-    const [topTiers, setTopTiers] = useState<{
-        first: string[];
-        second: string[];
-    }>({
-        first: [],
-        second: [],
-    })
-
-    const [leftTreeResult, setLeftTreeResult] = useState<Slot[]>([]);
-    const [rightTreeResult, setRightTreeResult] = useState<Slot[]>([]);
-    const [participantList, setParticipantList] = useState<{
-        left: CompeteMember[];
-        right: CompeteMember[];
-    }>({
-        left: [],
-        right: []
-    });
-
-    const leftTree = useRef<Tree>(null);
-    const rightTree = useRef<Tree>(null);
+    const [ballots, setBallots] = useState<{
+        id: number;
+        ballot: number;
+        isPlayoff: boolean;
+        position: { x: number; y: number };
+    }[]>([]);
+    const [matches, setMatches] = useState<{
+        id: number;
+        position: { x: number; y: number };
+    }[]>([]);
 
     useEffect(() => {
-        setStageSize({
-            width: containerRef.current.clientWidth,
-            height: containerRef.current.clientHeight,
-        });
         TournamentBracket.initialize(
             containerRef.current.clientWidth,
             containerRef.current.clientHeight,
             'tree-container'
         );
+        
     }, []);
 
 
     useEffect(() => {
-        if (participants.length > 0 && participants.length < 12) {
-            const suffled = suffleList(participants);
-            setParticipantList({
-                left: suffled,
-                right: [],
-            });
-
-            setTopTiers({
-                first: [participants[0].name, participants[1].name],
-                second: []
-            });
-        } else if (participants.length >= 12 && !leftOnly) {
-            const splitted = splitArray(suffleList(participants));
-
-            setParticipantList({
-                left: splitted[0],
-                right: splitted[1],
-            });
-
-            setTopTiers({
-                first: [splitted[0][0].name, splitted[1][0].name],
-                second: [splitted[0][1].name, splitted[1][1].name]
-            });
-        }
-        else if (participants.length >= 12 && leftOnly) {
-            const suffled = suffleList(participants);
-            setParticipantList({
-                left: suffled,
-                right: [],
-            });
-
-            setTopTiers({
-                first: [participants[0].name, participants[1].name],
-                second: []
-            });
+        if(participants.length > 0) {
+            const total = participants.length;
+            TournamentBracket.createLevels(total);
+            TournamentBracket.render();
+            setBallots(TournamentBracket.generateBallots());
+            setMatches(TournamentBracket.generateMatchIds(total));
         }
     }, [participants]);
 
@@ -113,562 +61,64 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons, leftOnl
             //     const suffle = suffleList(participantList.right);
             //     setRightTreeResult(getNodePosition(rightTree.current, suffle));
             // }
-            setMatchBase64(null);
-            matching().then(() => {
-                enableButtons();
-                const canvas = TournamentBracket.canvas;
-                const image = canvas.toDataURL("image/png");
-                setMatchBase64(image);
-            })
+            // setMatchBase64(null);
+            // matching().then(() => {
+            //     enableButtons();
+            //     const canvas = TournamentBracket.canvas;
+            //     const image = canvas.toDataURL("image/png");
+            //     setMatchBase64(image);
+            // })
         }
     }, [start]);
 
-    useEffect(() => {
-        let height = 0;
-        if (participantList.left.length > 15) {
-            height = nodeHeight - 10;
-        } else {
-            height = nodeHeight;
-        }
-
-        if (participantList.left.length > 0 && participantList.right.length === 0) {
-            const matchTemplates = calculatePlayoffs(participantList.left.length);
-            const width = containerRef.current.clientWidth;
-            const spacing = (containerRef.current.clientWidth - width) / 2;
-            
-            leftTree.current = new Tree(spacing, 0,
-                width,
-                containerRef.current.clientHeight,
-                'toRight',
-                TournamentBracket.canvas,
-                { width: nodeWidth, height },
-                { width: playOffNodeWidth, height},
-            );
-            leftTree.current.createLevels(matchTemplates.nodes);
-            leftTree.current.createPlayOff(matchTemplates.playOffs)
-            leftTree.current.render();
-        } else if (participantList.left.length > 0 && participantList.right.length > 0) {
-            // Setup left tree
-            const leftTemplate = calculatePlayoffs(participantList.left.length)
-
-            leftTree.current = new Tree(0, 0,
-                containerRef.current.clientWidth / 2 - 5,
-                containerRef.current.clientHeight,
-                'toRight',
-                TournamentBracket.canvas,
-                { width: nodeWidth, height },
-                { width: playOffNodeWidth, height },
-            );
-
-            leftTree.current.createLevels(leftTemplate.nodes);
-            leftTree.current.createPlayOff(leftTemplate.playOffs);
-            leftTree.current.render();
-
-            // Setup right tree
-            const rightTemplate = calculatePlayoffs(participantList.right.length);
-            rightTree.current = new Tree(containerRef.current.clientWidth / 2 + 5, 0,
-                containerRef.current.clientWidth / 2 - 5,
-                containerRef.current.clientHeight,
-                'toLeft',
-                TournamentBracket.canvas,
-                { width: nodeWidth, height },
-                { width: playOffNodeWidth, height },
-            );
-
-            rightTree.current.createLevels(rightTemplate.nodes);
-            rightTree.current.createPlayOff(rightTemplate.playOffs)
-            rightTree.current.render();
-        }
-    }, [participantList]);
-
-    const calculatePlayoffs = (total: number) => {
-        let baseLog = Math.round(getBaseLog(2, total));
-        let playOffs = Math.abs(total - Math.pow(2, baseLog));
-        if (isOdd(playOffs)) {
-            let nodes = total - playOffs;
-            return {
-                playOffs,
-                nodes,
-            };
-        } else {
-            let baseLog = Math.floor(getBaseLog(2, total));
-            let playOffs = Math.abs(total - Math.pow(2, baseLog));
-            let nodes = total - playOffs;
-            return {
-                playOffs,
-                nodes,
-            };
-        }
-    }
-
-    const getNodePosition = (tree: Tree, participants: CompeteMember[]) => {
-        const ballot = tree.generateBallots();
-        let officialSlots = 0;
-        ballot.map((key, index) => {
-            const node = tree.getNode(key);
-            if (!node.hasParents) {
-                officialSlots++;
-            }
-        });
-        if (tree.getTotalPlayoffs() > 0) participants = suffleList(participants);
-        const idList = participants.map((_, index) => index + 1)
-        const list = participants.map((item) => ({
-            name: item.name,
-            slot: 0,
-        }));
-
-        let pick: Slot[] = [];
-
-        // const [ballot01, ballot02] = splitArray(ballot);
-        // const [idList01, idList02] = splitArray(idList);
-        // const [list01, list02] = splitArray(list);
-        // let exclude: number[] = [];
-        // let min = idList01[0];
-        // let max = idList01[idList01.length - 1];
-
-        // ballot01.map((key, index) => {
-        //     const node = tree.getNode(key);
-        //     if (!node.hasParents) {
-        //         const randomIndex = generateRandom(min, max, exclude);
-        //         pick.push({
-        //             index: key,
-        //             picked: [list01[randomIndex - 1].name],
-        //         });
-        //         exclude.push(randomIndex);
-        //     }
-        // });
-        // exclude = [];
-        // ballot02.map((key, index) => {
-        //     const node = tree.getNode(key);
-        //     if (!node.hasParents) {
-        //         const randomIndex = generateRandom(min, max, exclude);
-        //         pick.push({
-        //             index: key,
-        //             picked: [list02[randomIndex - 1].name],
-        //         });
-        //         exclude.push(randomIndex);
-        //     }
-        // });
-        if (tree.getTotalPlayoffs() === 0) {
-            const [ballot01, ballot02] = splitArray(ballot);
-            const [idList01, idList02] = splitArray(idList);
-            const [list01, list02] = splitArray(list);
-            let exclude: number[] = [];
-            let min = idList01[0];
-            let max = idList01[idList01.length - 1];
-
-            console.log(ballot01);
-            console.log(idList);
-
-            ballot01.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    const randomIndex = generateRandom(min, max, exclude);
-                    pick.push({
-                        index: key,
-                        picked: [list01[randomIndex - 1].name],
-                    });
-                    exclude.push(randomIndex);
-                }
-            });
-            exclude = [];
-            ballot02.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    const randomIndex = generateRandom(min, max, exclude);
-                    pick.push({
-                        index: key,
-                        picked: [list02[randomIndex - 1].name],
-                    });
-                    exclude.push(randomIndex);
-                }
-            });
-        } else {
-            console.log(">>>> list: ", list);
-            let officialSlots: any[] = [];
-            let highRankSlots: any[] = [];
-            let highRankList: any[] = [];
-            let highRank = 0;
-            ballot.map((key, index) => {
-                const node = tree.getNode(key);
-                if (!node.hasParents) {
-                    officialSlots.push(key);
-                    highRankSlots.push(highRank + 1);
-                    highRankList.push(list[highRank]);
-                    highRank += 1;
-                }
-            });
-
-            if (officialSlots.length <= 2) {
-                const [ballot01, ballot02] = splitArray(officialSlots);
-                const [idList01, idList02] = splitArray(highRankSlots);
-                const [list01, list02] = splitArray(highRankList);
-                let exclude: number[] = [];
-                let min = idList01[0];
-                let max = idList01[idList01.length - 1];
-
-                ballot01.map((key, index) => {
-                    const node = tree.getNode(key);
-                    if (!node.hasParents) {
-                        const randomIndex = generateRandom(min, max, exclude);
-                        pick.push({
-                            index: key,
-                            picked: [list01[randomIndex - 1].name],
-                        });
-                        exclude.push(randomIndex);
-                    }
-                });
-                exclude = [];
-                min = 0;
-                max = list02.length - 1;
-
-                ballot02.map((key, index) => {
-                    const node = tree.getNode(key);
-                    if (!node.hasParents) {
-                        const randomIndex = generateRandom(min, max, exclude);
-                        pick.push({
-                            index: key,
-                            picked: [list02[randomIndex].name],
-                        });
-                        exclude.push(randomIndex);
-                    }
-                });
-
-                exclude = [...highRankSlots];
-                let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
-                let playOffIds = idList.filter(id => !highRankSlots.includes(id));
-
-                min = playOffIds[0];
-                max = playOffIds[playOffIds.length - 1];
-                playOffBallots.map((key, index) => {
-                    const node = tree.getNode(key);
-                    if (node.hasParents) {
-                        let picked = [];
-                        let randomIndex = generateRandom(min, max, exclude);
-                        picked.push(list[randomIndex - 1].name);
-                        exclude.push(randomIndex);
-
-                        randomIndex = generateRandom(min, max, exclude);
-                        picked.push(list[randomIndex - 1].name);
-                        exclude.push(randomIndex);
-
-                        pick.push({
-                            index: key,
-                            picked,
-                        })
-                    }
-                });
-            } else {
-                // Just like case 0 playoffs:
-                const [ballot01, ballot02] = splitArray(ballot);
-                let [list01, list02] = splitArray(list);
-                let exclude: number[] = [];
-
-
-                let totalPlayer = 0;
-                for (let i = 0; i < ballot01.length; i++) {
-                    if (i < tree.getTotalPlayoffs()) {
-                        console.log(' double this slot', i);
-                        totalPlayer += 2;
-                    } else {
-                        console.log("single this slot", i);
-                        totalPlayer += 1;
-                    }
-                }
-                const missing = totalPlayer - list01.length;
-                console.log('>>>>> list01: ', list01.length);
-                console.log('>>>> list02: ', list02.length);
-                for (let i = 0; i < missing; i++) {
-                    let adjust = list02.splice(list02.length - 1, 1);
-                    list01 = list01.concat(adjust);
-                    console.log(adjust);
-                }
-
-                const idList01 = list01.map((_, index) => index + 1);
-                const idList02 = list02.map((_, index) => index + 1);
-
-                let min = idList01[0];
-                let max = idList01[idList01.length - 1];
-
-                console.log(idList01, idList02);
-
-                console.log('>>>>> list01: ', list01.length);
-                console.log('>>>> list02: ', list02.length);
-                // console.log('ballot: ', ballot01, ballot02);
-                // console.log('min - max: ', min, max);
-                ballot01.map((key, index) => {
-                    const node = tree.getNode(key);
-                    if (!node.hasParents) {
-                        console.log(exclude, key);
-                        const randomIndex = generateRandom(min, max, exclude);
-                        console.log(randomIndex, key);
-                        exclude.push(randomIndex);
-                        pick.push({
-                            index: key,
-                            picked: [list01[randomIndex - 1].name],
-                        });
-                    } else {
-                        console.log(exclude, key);
-                        let picked = [];
-                        let randomIndex = generateRandom(min, max, exclude);
-                        picked.push(list01[randomIndex - 1].name);
-                        exclude.push(randomIndex);
-
-                        randomIndex = generateRandom(min, max, exclude);
-                        picked.push(list01[randomIndex - 1].name);
-                        exclude.push(randomIndex);
-
-                        pick.push({
-                            index: key,
-                            picked,
-                        })
-                    }
-                })
-
-                exclude = [];
-
-                min = idList02[0];
-                max = idList02[idList02.length - 1];
-
-                ballot02.map((key, index) => {
-                    const node = tree.getNode(key);
-                    if (!node.hasParents) {
-                        const randomIndex = generateRandom(min, max, exclude);
-                        pick.push({
-                            index: key,
-                            picked: [list02[randomIndex - 1].name],
-                        });
-                        exclude.push(randomIndex);
-                    } else {
-                        let picked = [];
-                        let randomIndex = generateRandom(min, max, exclude);
-                        picked.push(list02[randomIndex - 1].name);
-                        exclude.push(randomIndex);
-
-                        randomIndex = generateRandom(min, max, exclude);
-                        picked.push(list02[randomIndex - 1].name);
-                        exclude.push(randomIndex);
-
-                        pick.push({
-                            index: key,
-                            picked,
-                        })
-                    }
-                });
-
-
-                // let playOffBallots = ballot.filter(id => !officialSlots.includes(id));
-                // let playOffIds = idList.filter(id => !highRankSlots.includes(id));
-                // min = playOffIds[0];
-                // max = playOffIds[playOffIds.length - 1];
-
-                // // console.log('>>>> exclude', exclude);
-                // console.log(">>>> After first round: ", pick);
-                // // console.log('>>>>> Playoff ballots: ', playOffBallots);
-                // // console.log('>>>>> Playoff id: ', playOffIds);
-
-                // playOffBallots.map((key, index) => {
-                //     const node = tree.getNode(key);
-                //     if (node.hasParents) {
-                //         let picked = [];
-                //         let randomIndex = generateRandom(min, max, exclude);
-                //         picked.push(list[randomIndex - 1].name);
-                //         exclude.push(randomIndex);
-
-                //         randomIndex = generateRandom(min, max, exclude);
-                //         picked.push(list[randomIndex - 1].name);
-                //         exclude.push(randomIndex);
-
-                //         pick.push({
-                //             index: key,
-                //             picked,
-                //         })
-                //     }
-                // });
-            }
-        }
-        return pick;
-    }
-
     const matching = () => {
-        return new Promise((resolve, reject) => {
-            // let timer: any;
 
-            // timer = setInterval(() => {
-            //     if (participantList.left.length > 0) {
-            //         // const suffle = suffleList(participantList.left);
-            //         setLeftTreeResult(getNodePosition(leftTree.current, participantList.left));
-            //     }
-            //     if (participantList.right.length > 0) {
-            //         // const suffle = suffleList(participantList.right);
-            //         setRightTreeResult(getNodePosition(rightTree.current, participantList.right));
-            //     }
-            // }, 100);
-
-            // setTimeout(() => {
-            //     clearInterval(timer);
-            //     resolve(null);
-            // }, 1200);
-
-            if (participantList.left.length > 0) {
-                // const suffle = suffleList(participantList.left);
-                setLeftTreeResult(getNodePosition(leftTree.current, participantList.left));
-            }
-            if (participantList.right.length > 0) {
-                // const suffle = suffleList(participantList.right);
-                setRightTreeResult(getNodePosition(rightTree.current, participantList.right));
-            }
-            resolve(null);
-        })
     }
 
     const onImageLoad = () => {
     }
 
     const getColorByName = (name: string, side: 1 | 2) => {
-        return topTiers.first.includes(name) ? 'red' : topTiers.second.includes(name) ? 'blue' : 'none';
+
     }
 
-    const leftTreeRender = useMemo(() => {
-        if (leftTreeResult.length === 0) {
-            return null;
-        }
-
-        const label: JSX.Element[] = [];
-        const total = participants.length;
-        let spacing = 0;
-        if (total < 12) {
-            const width = containerRef.current.clientWidth;
-            spacing = (containerRef.current.clientWidth - width) / 2;
-        }
-
-        leftTreeResult.map((slot, index) => {
-            const node = leftTree.current.getNode(slot.index);
-            if (slot.picked.length == 2) {
-                const pos01 = node.parents[0].position();
-
-                const pos02 = node.parents[1].position();
-                label.push(
+    const matchLabel = useMemo(() => {
+        return <NameContainer>
+            {
+                ballots.map(item => (
                     <div
                         style={{
-                            left: pos01.x + spacing,
-                            top: pos01.y,
-                            fontSize: 12,
-                            width: playOffNodeWidth,
-                            height: playOffNodeHeight,
+                            left: item.position.x + paddingLeft,
+                            top: item.position.y + paddingTop,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 1)}`}
-                        key={slot.picked[0]}
+                        // className='match-id'
+                        className={`match-id ${!item.isPlayoff ? 'valid' : ''}`}
+                        key={item.id}
                     >
-                        {slot.picked[0]}
-                    </div>,
-                    <div
-                        style={{
-                            left: pos02.x + spacing,
-                            top: pos02.y,
-                            fontSize: 12,
-                            width: playOffNodeWidth,
-                            height: playOffNodeHeight,
-                        }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[1], 1)}`}
-                        key={slot.picked[1]}
-                    >
-                        {slot.picked[1]}
-                    </div>,
-                )
-            } else {
-                const position = node.position();
-                label.push(
-                    <div
-                        style={{
-                            left: position.x + spacing,
-                            top: position.y,
-                            width: nodeWidth,
-                            height: nodeHeight,
-                        }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 1)}`}
-                        key={slot.picked[0]}
-                    >
-                        {slot.picked[0]}
+                        {item.id}
                     </div>
-                )
+                ))
             }
-        });
-
-        return label;
-    }, [leftTreeResult]);
-
-    const rightTreeRender = useMemo(() => {
-        const label: JSX.Element[] = [];
-        rightTreeResult.map((slot, index) => {
-            const node = rightTree.current.getNode(slot.index);
-            if (slot.picked.length == 2) {
-                const pos01 = node.parents[0].position();
-                const pos02 = node.parents[1].position();
-                label.push(
+            {
+                matches.map(item => (
                     <div
                         style={{
-                            left: stageSize.width - pos01.x - playOffNodeWidth,
-                            top: pos01.y,
-                            fontSize: 12,
-                            width: playOffNodeWidth,
-                            height: playOffNodeHeight,
+                            left: item.position.x + paddingLeft,
+                            top: item.position.y + paddingTop,
                         }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 2)}`}
-                        key={slot.picked[0]}
+                        className="match-id"
+                        key={item.id + "-" + "matches"}
                     >
-                        {slot.picked[0]}
-                    </div>,
-                    <div
-                        style={{
-                            left: stageSize.width - pos02.x - playOffNodeWidth,
-                            top: pos02.y,
-                            fontSize: 12,
-                            width: playOffNodeWidth,
-                            height: playOffNodeHeight,
-                        }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[1], 2)}`}
-                        key={slot.picked[1]}
-                    >
-                        {slot.picked[1]}
-                    </div>,
-                )
-            } else {
-                const position = node.position();
-                label.push(
-                    <div
-                        style={{
-                            left: stageSize.width - position.x - nodeWidth,
-                            top: position.y,
-                            width: nodeWidth,
-                            height: nodeHeight,
-                        }}
-                        // className="label"
-                        className={`label ${getColorByName(slot.picked[0], 2)}`}
-                        key={slot.picked[0]}
-                    >
-                        {slot.picked[0]}
+                        {formatNumber(item.id)}
                     </div>
-                )
+                ))
             }
-        });
-
-        return label;
-    }, [rightTreeResult, stageSize]);
-
-    const canvasContainer = useMemo(() => {
-        return <TreeContainer ref={containerRef} id="tree-container" />;
-    }, []);
+        </NameContainer>
+    }, [ballots, matches]);
 
     return (
-        <>
-            {canvasContainer}
-            {
+        <TreeContainer ref={containerRef} id="tree-container">
+            {/* {
                 matchBase64 && (
                     <ImageContainer>
                         <img src={matchBase64} alt="lull" onLoad={onImageLoad} />
@@ -676,10 +126,10 @@ const TournamentTree: FC<Props> = ({ participants, start, enableButtons, leftOnl
                 )
             }
             <NameContainer>
-                {leftTreeRender}
-                {rightTreeRender}
-            </NameContainer>
-        </>
+           
+            </NameContainer> */}
+            {matchLabel}
+        </TreeContainer>
     );
 }
 

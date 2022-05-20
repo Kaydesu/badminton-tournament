@@ -28,8 +28,14 @@ export const contentList = [
     },
 ];
 
-export const nodeWidth = 150;
-export const nodeHeight = 30;
+export const paddingTop = 55;
+export const paddingLeft = 75;
+export const spacing = 35;
+export const size = 150;
 
-export const playOffNodeHeight = 25;
-export const playOffNodeWidth = 130;
+export const formatNumber = (value: number) => {
+    if(value < 10) {
+        return "0" + value;
+    }
+    return "" + value;
+}

@@ -1,21 +1,147 @@
-import { playOffNodeHeight, playOffNodeWidth } from "@utils/constants";
-import { isOdd } from "@utils/math";
+import { paddingLeft, paddingTop, spacing, size } from "@utils/constants";
+import MATCH_TEMPLATES from "./matchTemplates";
+
+const hasPlayoff = (entries: number) => ![4, 8, 16, 32].includes(entries);
+
+type MatchType = 'normal' | 'playoff';
 
 class TournamentBracket {
     private _canvas: HTMLCanvasElement;
+    private _slots: {
+        id: number | number[];
+        slot: Slot;
+    }[];
+
+    private _levels: Map<number, {
+        id: number | number[];
+        slot: Slot;
+    }[]>;
 
     constructor() {
         this._canvas = null;
+        this._slots = [];
+        this._levels = new Map();
     }
 
     initialize(width: number, height: number, container: string) {
+        const ratio = window.devicePixelRatio;
         this._canvas = document.createElement('canvas');
-        this._canvas.width = width;
-        this._canvas.height = height;
+        this._canvas.width = width * ratio;
+        this._canvas.height = height * ratio;
+        this._canvas.style.width = width + "px";
+        this._canvas.style.height = height + "px";
+        this._canvas.getContext("2d").scale(ratio, ratio);
 
         if (!document.getElementById(container).querySelector('canvas')) {
             document.getElementById(container).appendChild(this._canvas);
         }
+    }
+
+    createLevels(entries: number) {
+        let label = 1;
+        if (hasPlayoff(entries)) {
+            const template = MATCH_TEMPLATES.get(entries) as MatchType[];
+            template.map((matchType, index) => {
+                const slot = matchType === 'normal' ? new Slot(size / 2, 0, size) : new Slot(0, 0, size, true);
+                if (matchType === 'normal') {
+                    slot.label = [label];
+                } else {
+                    slot.label = [label, label += 1];
+                }
+                label += 1;
+                this._slots.push({
+                    id: index + 1,
+                    slot: slot
+                });
+            });
+        } else {
+            for (let i = 0; i < entries; i++) {
+                const slot = new Slot(0, 0, size);
+                slot.label = [label];
+                label += 1;
+                this._slots.push({
+                    id: i + 1,
+                    slot: slot
+                })
+            }
+        }
+
+        //Create lower levels:
+        let level = 1;
+        let id = 0;
+        const firstLevelSlots = this._slots.length;
+
+        for (let i = firstLevelSlots / 2; i >= 1; i /= 2) {
+            let arrayId = new Array(i).fill(0).map((_, i) => {
+                id += 1;
+                return id;
+            });
+            this._levels.set(level, arrayId.map((id) => ({
+                id: id,
+                slot: new Slot(0, 0, 100)
+            })))
+            level += 1;
+        }
+    }
+
+    generateBallots() {
+        const ballots: {
+            ballot: number;
+            id: number;
+            isPlayoff: boolean;
+            position: { x: number, y: number };
+        }[] = [];
+
+        this._slots.map((item) => {
+            if (item.slot.label.length === 1) {
+                ballots.push({
+                    id: item.slot.label[0],
+                    ballot: item.id as number,
+                    isPlayoff: false,
+                    position: { ...item.slot.position() },
+                })
+            } else {
+                ballots.push({
+                    id: item.slot.label[0],
+                    ballot: item.id as number,
+                    isPlayoff: true,
+                    position: { x: item.slot.position().x, y: item.slot.top },
+                });
+                ballots.push({
+                    id: item.slot.label[1],
+                    ballot: item.id as number,
+                    isPlayoff: true,
+                    position: { x: item.slot.position().x, y: item.slot.bottom },
+                })
+            }
+        })
+        return ballots;
+    }
+
+    generateMatchIds(entries: number) {
+        const matches: {
+            id: number;
+            position: { x: number; y: number };
+        }[] = []
+        let matchId = 0;
+        if (hasPlayoff(entries)) {
+            this._slots.map(item => {
+                item.slot.isPlayOff && matches.push({
+                    id: matchId += 1,
+                    position: { x: item.slot.tail.x - size / 2, y: item.slot.tail.y },
+                })
+            });
+        }
+        this._levels.forEach(level => {
+            level.map((item) => {
+                matches.push({
+                    id: matchId += 1,
+                    position: item.slot.position(),
+                })
+            })
+        });
+
+        return matches;
     }
 
     clear() {
@@ -23,416 +149,184 @@ class TournamentBracket {
         context.clearRect(0, 0, this._canvas.width, this._canvas.height);
     }
 
+    render() {
+        this.distributeVertical();
+        this.distributeLevels();
+        this._slots.map(slot => {
+            this.drawNode(slot.slot);
+        });
+        this._levels.forEach(level => {
+            level.map(item => {
+                this.drawNode(item.slot);
+            })
+        })
+    }
+
+    private distributeVertical() {
+        this._slots.map((item, index) => {
+            if (item.id !== 1) {
+                const prevSlot = this._slots[index - 1];
+                item.slot.position({
+                    ...item.slot.position(),
+                    y: prevSlot.slot.bottom + spacing,
+                });
+            } else {
+                item.slot.position({ ...item.slot.position(), y: 0 });
+            }
+        });
+    }
+
+    private distributeLevels() {
+        this._levels.forEach((level, key) => {
+            if (key === 1) {
+                level.map((item, index) => {
+                    const slotParent01 = this._slots[index * 2];
+                    const slotParent02 = this._slots[index * 2 + 1];
+
+                    item.slot.position({
+                        x: Math.max(slotParent01.slot.tail.x, slotParent02.slot.tail.x),
+                        y: (slotParent01.slot.tail.y + slotParent02.slot.tail.y) / 2,
+                    });
+                    item.slot.parents = [slotParent01.slot, slotParent02.slot];
+                });
+            } else {
+                level.map((item, index) => {
+                    const slotParent01 = this._levels.get(key - 1)[index * 2];
+                    const slotParent02 = this._levels.get(key - 1)[index * 2 + 1];
+                    item.slot.position({
+                        x: slotParent01.slot.tail.x,
+                        y: (slotParent01.slot.tail.y + slotParent02.slot.tail.y) / 2,
+                    });
+                    item.slot.parents = [slotParent01.slot, slotParent02.slot];
+                });
+            }
+        });
+    }
+
+    private drawNode(node: Slot) {
+        const ctx = this._canvas.getContext('2d');
+        node.draw(ctx);
+    }
+
     get canvas() {
         return this._canvas;
     }
 }
 
-export class Tree {
-    private _direction: 'toRight' | 'toLeft';
-    private _canvas: HTMLCanvasElement;
-    private _levels: Map<number, Node>[];
-    private _playoff: Map<number, {
-        athlete01: Node;
-        athlete02: Node;
-    }>
+
+class Slot {
     private _position: { x: number; y: number };
-    private _size: { width: number; height: number };
-    private _from: number;
-    private _nodeSize: { width: number; height: number };
-    private _playOffNodeSize: { width: number; height: number };
+    private _size: number;
+    private _parents: Slot[];
+    public label: number[];
+    public againts: number;
+    private _top: number;
+    private _bottom: number;
+    private _tail: { x: number; y: number };
+    public isPlayOff: boolean;
 
-    constructor(
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        direction: 'toRight' | 'toLeft',
-        canvas: HTMLCanvasElement,
-        nodeSize: { width: number; height: number; },
-        playOffNodeSize: { width: number; height: number },
-    ) {
-        this._position = { x, y };
-        this._size = { width, height };
-        this._direction = direction;
-        this._canvas = canvas;
-        this._levels = [];
-        this._playoff = new Map;
-        this._from = 1;
-        this._nodeSize = nodeSize;
-        this._playOffNodeSize = playOffNodeSize;
-    }
-
-    getTotalPlayoffs() {
-        return this._playoff.size;
-    }
-
-    getNode(key: number) {
-        return this._levels[0].get(key);
-    }
-
-    getPlayOff(key: number) {
-        return this._playoff.get(key);
-    }
-
-    generateBallots() {
-        const a: number[] = [];
-        this._levels[0].forEach((_, key) => {
-            a.push(key);
-        });
-        return a;
-    }
-
-    createLevels(entries: number) {
-        let level = 0;
-        for (let i = entries; i >= 1; i /= 2) {
-            const arr = new Array(Math.floor(i)).fill(0);
-            const nodes = new Map();
-            arr.map((_, index) => {
-                const newNode = new Node(0, 0, this._nodeSize.width, this._nodeSize.height);
-                if (level > 0) {
-                    const added = index + 1;
-                    this._levels[level - 1].get(index + added).converge(newNode);
-                    this._levels[level - 1].get(index + added + 1).converge(newNode);
-                }
-                nodes.set(index + 1, newNode);
-            });
-            this._levels.push(nodes);
-            level += 1;
-        }
-    }
-
-    createPlayOff(total: number) {
-        let count = 0;
-        if (this._levels[0].size < 12) {
-            this._levels[0].forEach((node, to) => {
-                if (count < total) {
-                    const athlete01 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
-                    const athlete02 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
-                    athlete01.converge(node);
-                    athlete02.converge(node);
-                    this._playoff.set(to, {
-                        athlete01,
-                        athlete02
-                    });
-                }
-                count++;
-            });
-        } else {
-            console.log('>>>>>>create playoffs');
-            this._levels[0].forEach((node, to) => {
-                if (count < total) {
-                    if (!isOdd(to)) {
-                        console.log(to);
-                        const athlete01 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
-                        const athlete02 = new Node(0, 0, playOffNodeWidth, this._playOffNodeSize.height);
-                        athlete01.converge(node);
-                        athlete02.converge(node);
-                        this._playoff.set(to, {
-                            athlete01,
-                            athlete02
-                        });
-                        count++;
-                    }
-                }
-            });
-        }
-    }
-
-    render() {
-        this.distributeVertical();
-        this.distributeHorizontal();
-        if (this._playoff.size > 0) {
-            this.distributePlayOffs();
-        }
-
-        if (this._direction === 'toLeft') {
-            this._canvas.getContext('2d').translate(this._position.x + this._size.width, 0);
-            this._canvas.getContext('2d').scale(-1, 1);
-        } else {
-            this._canvas.getContext('2d').translate(this._position.x, 0);
-        }
-
-        this._levels.map((nodes, index) => {
-            nodes.forEach((node, key) => {
-                if (this._playoff.size > 0 &&
-                    key === this._from &&
-                    index === 0
-                ) {
-                    const middlePoint01 = node.parents[0].out;
-                    const middlePoint02 = node.parents[1].out;
-                    const average = (middlePoint02.y + middlePoint01.y) / 2;
-                    node.position({
-                        x: node.position().x,
-                        y: average - this._nodeSize.height / 2,
-                    })
-                }
-                this.drawNode(node);
-                this.drawBranchBig(node, index === 0);
-            })
-        });
-
-        this._playoff.forEach(playoff => {
-            this.drawNode(playoff.athlete01);
-            this.drawNode(playoff.athlete02);
-            this.drawBranch(playoff.athlete01);
-            this.drawBranch(playoff.athlete02);
-        });
-    }
-
-    private drawNode(node: Node) {
-        const ctx = this._canvas.getContext('2d');
-        const { x, y } = node.position();
-        const { width, height } = node.size();
-        ctx.fillStyle = '#c8d3d5';
-        ctx.beginPath();
-        ctx.rect(x, y, width, height);
-        ctx.fill();
-    }
-
-    private drawBranch(node: Node, drawFrom: boolean = true) {
-        const ctx = this._canvas.getContext('2d');
-        ctx.strokeStyle = '#4B4B4B';
-        ctx.beginPath();
-        const to = node.to;
-        ctx.moveTo(to[0].x, to[0].y);
-        for (let i = 1; i < to.length; i++) {
-            ctx.lineTo(to[i].x, to[i].y);
-        }
-        if (drawFrom) {
-            const from = node.from;
-            ctx.moveTo(from[0].x, from[0].y);
-            for (let i = 1; i < from.length; i++) {
-                ctx.lineTo(from[i].x, from[0].y);
-            }
-        }
-        ctx.stroke();
-    }
-
-    private drawBranchBig(node: Node, drawFrom: boolean = true) {
-        if (!node.child) {
-            return;
-        }
-        const ctx = this._canvas.getContext('2d');
-        ctx.strokeStyle = '#4B4B4B';
-        ctx.beginPath();
-        const childTop = node.child.top;
-        const out = node.out;
-        ctx.moveTo(out.x, out.y);
-        ctx.lineTo(childTop.x, out.y);
-        ctx.lineTo(childTop.x, childTop.y);
-
-        if (drawFrom) {
-            const from = node.from;
-            ctx.moveTo(from[0].x, from[0].y);
-            for (let i = 1; i < from.length; i++) {
-                ctx.lineTo(from[i].x, from[0].y);
-            }
-        }
-
-        // // for (let i = 1; i < to.length; i++) {
-        // //     ctx.lineTo(to[i].x, to[i].y);
-        // // }
-        // ctx.lineTo(0, 0);
-        // // if (drawFrom) {
-        // //     const from = node.from;
-        // //     ctx.moveTo(from[0].x, from[0].y);
-        // //     for (let i = 1; i < from.length; i++) {
-        // //         ctx.lineTo(from[i].x, from[0].y);
-        // //     }
-        // // }
-        ctx.stroke();
-    }
-
-    private distributeVertical() {
-        const totalCount = this._levels[0].size;
-        const totalHeight = this._nodeSize.height * totalCount;
-        const spacing = ((this._size.height - totalHeight) / (totalCount - 1));
-        this._levels[0].forEach((node, key) => {
-            const index = key - this._from;
-            node.position({
-                ...node.position(),
-                y: (this._nodeSize.height + spacing) * index,
-            })
-        });
-
-        for (let i = 1; i < this._levels.length; i++) {
-            this._levels[i].forEach((node, key) => {
-                const out1 = node.parents[0].out;
-                const out2 = node.parents[1].out;
-                const averageY = (out1.y + out2.y) / 2;
-                node.position({
-                    ...node.position(),
-                    y: averageY - this._nodeSize.height / 2,
-                })
-            });
-        }
-    }
-
-    private distributePlayOffs() {
-        this._playoff.forEach((playoff, key) => {
-            if (key === this._from) {
-                const firstSlot = { x: 0, y: 0 };
-                const secondSlot = { x: 0, y: (this._playOffNodeSize.height + 10) };
-                playoff.athlete01.position(firstSlot);
-                playoff.athlete02.position(secondSlot);
-            } else if (key === this._levels[0].size) {
-                const secondSlot = { x: 0, y: this._size.height - this._playOffNodeSize.height };
-                const firstSlot = { x: 0, y: secondSlot.y - (this._playOffNodeSize.height + 10) };
-                playoff.athlete01.position(firstSlot);
-                playoff.athlete02.position(secondSlot);
-            } else {
-                const middlePoint = playoff.athlete01.child.in;
-                const firstSlot = { x: 0, y: middlePoint.y - 5 - this._playOffNodeSize.height };
-                const secondSlot = { x: 0, y: firstSlot.y + (this._playOffNodeSize.height + 10) };
-                playoff.athlete01.position(firstSlot);
-                playoff.athlete02.position(secondSlot);
-            }
-        })
-    }
-
-    private distributeHorizontal() {
-        if (this._playoff.size === 0) {
-            const totalWidth = this._nodeSize.width * this._levels.length;
-            const spacing = (this._size.width - totalWidth) / (this._levels.length - 1);
-            this._levels.map((level, index) => {
-                level.forEach(node => {
-                    node.position({
-                        ...node.position(),
-                        x: (this._nodeSize.width + spacing) * index,
-                    })
-                })
-            });
-        } else {
-            const totalWidth = this._nodeSize.width * this._levels.length;
-
-            const spacing = (this._size.width - 150 - totalWidth) / (this._levels.length - 1);
-            this._levels.map((level, index) => {
-                level.forEach(node => {
-                    node.position({
-                        ...node.position(),
-                        x: index === 0 ? 150 : (this._nodeSize.width + spacing) * index + 150,
-                    })
-                })
-            });
-        }
-    }
-}
-
-class Node {
-    private _position: { x: number; y: number };
-    private _size: { width: number; height: number };
-    private _child: Node;
-    private _parents: Node[];
-
-    constructor(x: number, y: number, width: number, height: number) {
-        this._position = { x, y };
-        this._size = { width, height };
-        this._child = null;
+    constructor(x: number, y: number, size: number, isPlayOff: boolean = false) {
+        this._size = size;
+        this.label = [];
         this._parents = [];
-    }
-
-    get out() {
-        return {
-            x: this._position.x + this._size.width,
-            y: this._position.y + this._size.height / 2,
-        }
-    }
-
-    get in() {
-        return {
-            x: this._position.x,
-            y: this._position.y + this._size.height / 2,
-        }
+        this.isPlayOff = isPlayOff;
+        this.position({ x, y });
     }
 
     get top() {
-        return {
-            x: this._position.x + this._size.width / 2,
-            y: this._position.y,
-        }
+        return this._top;
     }
 
     get bottom() {
-        return {
-            x: this._position.x + this._size.width / 2,
-            y: this._position.y + this._size.height,
-        }
+        return this._bottom;
     }
 
-    get to() {
-        if (!this._child) {
-            return [
-                this.out
-            ];
-        } else {
-            return [
-                this.out,
-                {
-                    x: this.out.x + (this._child.in.x - this.out.x) / 2,
-                    y: this.out.y
-                },
-                {
-                    x: this.out.x + (this._child.in.x - this.out.x) / 2,
-                    y: this.out.y + (this._child.in.y - this.out.y),
-                }
-            ]
-        }
+    get tail() {
+        return this._tail;
     }
 
-    get from() {
-        if (this._parents.length === 0) {
-            return [
-                this.in
-            ];
-        } else {
-            const average = { x: 0, y: 0 };
-            const sum = { x: 0, y: 0 };
-
-            this._parents.map(item => {
-                sum.x += item.to[1].x;
-                sum.y += item.to[1].y;
-            })
-
-            average.x = sum.x / this._parents.length;
-            average.y = sum.y / this._parents.length;
-
-            return [
-                this.in,
-                average,
-            ]
-        }
+    set parents(slots: Slot[]) {
+        this._parents = slots;
     }
 
     get parents() {
         return this._parents;
     }
 
-    get child() {
-        return this._child;
-    }
-
-    get hasParents() {
-        return this._parents.length > 0;
-    }
-
     position(pos?: { x: number; y: number }): { x: number; y: number } {
         if (pos) {
-            this._position = pos;
+            if (!this.isPlayOff) {
+                this._position = pos;
+                this._top = pos.y;
+                this._bottom = pos.y;
+                this._tail = {
+                    x: this._position.x + this._size,
+                    y: pos.y
+                }
+            } else {
+                this._position = pos;
+                this._top = pos.y;
+                this._bottom = pos.y + spacing;
+                this._tail = {
+                    x: this._position.x + this._size + size / 2,
+                    y: pos.y + spacing / 2,
+                }
+            }
         }
         return this._position;
     }
 
-    size(sz?: { width: number; height: number }): { width: number; height: number } {
+    size(sz?: number): number {
         if (sz) {
             this._size = sz;
         }
         return this._size;
     }
 
-    converge(node: Node) {
-        this._child = node;
-        node._parents.push(this);
+    draw(ctx: CanvasRenderingContext2D) {
+        const { x, y } = this._position;
+        const size = this._size;
+        if (!this.isPlayOff) {
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(x + paddingLeft, y + paddingTop);
+            ctx.lineTo(x + paddingLeft + size, y + paddingTop);
+            ctx.stroke();
+        } else {
+            // Draw slot 1:
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(x + paddingLeft, y + paddingTop);
+            ctx.lineTo(x + paddingLeft + size, y + paddingTop);
+            ctx.stroke();
+            // Draw slot 2:
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(x + paddingLeft, y + paddingTop + spacing);
+            ctx.lineTo(x + paddingLeft + size, y + paddingTop + spacing);
+            ctx.stroke();
+            // Connect slots:
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(x + paddingLeft + size, this.top + paddingTop);
+            ctx.lineTo(x + paddingLeft + size, this.bottom + paddingTop);
+            ctx.stroke();
+            // Draw output:
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(this._tail.x + paddingLeft, this._tail.y + paddingTop);
+            ctx.lineTo(this._tail.x - size / 2 + paddingLeft, this._tail.y + paddingTop);
+            ctx.stroke();
+        }
+        if (this._parents.length > 0) {
+            const parent01 = this._parents[0];
+            const parent02 = this._parents[1];
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(parent01.tail.x + paddingLeft, parent01.tail.y + paddingTop);
+            ctx.lineTo(parent02.tail.x + paddingLeft, parent02.tail.y + paddingTop);
+            ctx.stroke();
+        }
     }
 }
 
