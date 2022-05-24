@@ -32,7 +32,7 @@ export const suffleList = (list: any[]) => {
         count++;
         return key ? 1 : 0;
     });
-    
+
     list.map((item, index) => {
         if (isOdd(batch[index])) {
             if (isOdd(index)) {
@@ -69,4 +69,36 @@ export const splitArray = (list: any[]) => {
 
 export const suffleBallot = (list: any[]) => {
 
+}
+
+const isAgainstPrior = (self: number, oponent: number) => {
+    if (self === oponent) {
+        return true;
+    }
+    if (isOdd(oponent)) {
+        return self === oponent - 1;
+    } else {
+        return self === oponent + 1;
+    }
+}
+
+/**
+ * 
+ * @param selfMatches _ the match ids if this athlete go to the final
+ * @param oponentMatches _ the match ids if other athlete go to the final
+ * @returns number of matches til they both meet eachother
+ */
+
+export const matchBeforeOppose = (selfMatches: number[], oponentMatches: number[]) => {
+    let matches = 1;
+    const total = selfMatches.length;
+    for(let i = 0; i < total; i ++) {
+        // if(!isAgainstPrior(selfMatches[i], oponentMatches[i])) {
+        //     matches += 1;
+        // }
+        if(selfMatches[i] !== oponentMatches[i]) {
+            matches += 1;
+        }
+    }
+    return matches;
 }

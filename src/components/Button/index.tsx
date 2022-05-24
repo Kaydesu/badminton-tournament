@@ -10,11 +10,11 @@ interface Props extends ButtonProps {
 const Button = forwardRef<HTMLButtonElement, Props>((props, ref) => {
     const { className = '', children, onClick, buttonType = 'main' } = props;
     return buttonType === 'main' ? (
-        <MainButton ref={ref} className={`tambo-button ${className}`} onClick={onClick}>
+        <MainButton ref={ref} className={`tambo-button ${className}`} onClick={onClick} {...props}>
             {children}
         </MainButton>
     ) : (
-        <SecondaryButton ref={ref} className={`tambo-button ${className}`} onClick={onClick}>
+        <SecondaryButton ref={ref} className={`tambo-button ${className}`} onClick={onClick}  {...props}>
             {children}
         </SecondaryButton>
     );

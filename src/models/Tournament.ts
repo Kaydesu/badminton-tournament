@@ -4,6 +4,7 @@ export interface CompeteMember {
     yearOfBirth?: string;
     created: number;
     seeded: boolean;
+    prior?: boolean;
 }
 
 export interface CompeteTeam {

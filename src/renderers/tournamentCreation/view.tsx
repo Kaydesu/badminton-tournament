@@ -56,8 +56,83 @@ const View = () => {
         setNewTournament({
             ...newTournament,
             [e.target.name]: e.target.value,
+            menSingle: {
+                enabled: true,
+                teams: [
+                    {
+                        name: 'Tambo',
+                        symbol: '',
+                        members: []
+                    },
+                    {
+                        name: 'Tự do',
+                        symbol: '',
+                        members: []
+                    }
+                ]
+            },
+            menDouble: {
+                enabled: false,
+                teams: [
+                    {
+                        name: 'Tambo',
+                        symbol: '',
+                        members: []
+                    },
+                    {
+                        name: 'Tự do',
+                        symbol: '',
+                        members: []
+                    }
+                ]
+            },
+            womenSingle: {
+                enabled: false,
+                teams: [
+                    {
+                        name: 'Tambo',
+                        symbol: '',
+                        members: []
+                    },
+                    {
+                        name: 'Tự do',
+                        symbol: '',
+                        members: []
+                    }
+                ]
+            },
+            womenDouble: {
+                enabled: false,
+                teams: [
+                    {
+                        name: 'Tambo',
+                        symbol: '',
+                        members: []
+                    },
+                    {
+                        name: 'Tự do',
+                        symbol: '',
+                        members: []
+                    }
+                ]
+            },
+            mixedDouble: {
+                enabled: false,
+                teams: [
+                    {
+                        name: 'Tambo',
+                        symbol: '',
+                        members: []
+                    },
+                    {
+                        name: 'Tự do',
+                        symbol: '',
+                        members: []
+                    }
+                ]
+            },
         })
-    }
+    };
 
     const createTournament = () => {
         const errors = [];

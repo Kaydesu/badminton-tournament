@@ -15,6 +15,16 @@ import { splitArray, suffleList } from '@utils/math';
 const { fetch } = window.Api;
 const { previewPrint } = window.Controller;
 
+type Participant = {
+    name: string;
+    slot: number;
+    seeded: boolean;
+    prior: boolean;
+    team: string;
+    symbol: string;
+    created: number;
+}
+
 const TournamentMatch = () => {
 
     const navigate = useNavigate();
@@ -25,7 +35,7 @@ const TournamentMatch = () => {
     const [tournament, setTournament] = useState<TournamentSchema>(null);
     const [start, setStart] = useState<number>(null);
     const [disabled, setDisabled] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [ready, setReady] = useState(false);
     const [pagination, setPagination] = useState(() => ({
         current: 1,
         total: 1
@@ -34,6 +44,7 @@ const TournamentMatch = () => {
     useEffect(() => {
         fetch<TournamentSchema>('TOURNAMENTS', match.id).then((response) => {
             setTournament(response);
+            setReady(true);
         });
     }, []);
 
@@ -100,11 +111,19 @@ const TournamentMatch = () => {
                 return [];
         }
 
-        const members: CompeteMember[] = [];
+        const members: Participant[] = [];
+
         competeTeams.map((team) => {
             team.members.map(member => {
-                member.name = `${member.name}[${team.symbol || team.name}]`
-                members.push(member);
+                members.push({
+                    team: team.name,
+                    symbol: team.symbol,
+                    name: member.name,
+                    prior: Boolean(member.prior),
+                    seeded: member.seeded,
+                    created: member.created,
+                    slot: null,
+                });
             })
         });
         members.sort((a, b) => a.created - b.created);
@@ -140,10 +159,10 @@ const TournamentMatch = () => {
                                     <h2 className='tournament-name'>{tournament.name} ({tournament.age}) - {contentText()}</h2>
                                     <div className="branch-number">Nhánh: 1</div>
                                 </div>
-                                <TournamentTree participants={participants} start={0} />
+                                <TournamentTree participantsList={participants} start={0} ready={ready} />
                             </PrintedContent>
                         </div>
-                        <div className="contron-panel"></div>
+                        <div className="control-panel" id="control-panel"></div>
                     </div>
                 ) : (
                     <div className="loading">

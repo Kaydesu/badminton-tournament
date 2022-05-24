@@ -34,7 +34,7 @@ type Props = {
     registerNewMember: (name: string, member: CompeteMember, symbol?: string) => Promise<void>;
     registerNewTeam: (name: string, member: CompeteMember, symbol?: string) => Promise<void>;
     deleteMember: (name: string, team: string) => void;
-    handleUpdateRank: (memberName: string, teamName: string) => void;
+    handleUpdateRank: (memberName: string, teamName: string, prior: boolean) => void;
 }
 
 const TournamentStatistic: FC<Props> = ({
@@ -310,12 +310,24 @@ const TournamentStatistic: FC<Props> = ({
                             <div className={`info-field__input ${activeContent === Content.MAN_DOUBLE || activeContent === Content.WOMAN_DOUBLE || activeContent === Content.MIXED_DOUBLE ? 'info-field__input--double' : ''}`}>
                                 {
                                     activeContent === Content.MAN_SINGLE || activeContent === Content.WOMAN_SINGLE ? (
-                                        <Input value={currentMember[0].name} onChange={(e) => handleChangeMember(e, 0)} />
+                                        <Input
+                                            value={currentMember[0].name}
+                                            onChange={(e) => handleChangeMember(e, 0)}
+                                            onKeyUp={e => { e.keyCode === 13 && register() }}
+                                        />
                                     ) : (
                                         <>
-                                            <Input value={currentMember[0].name} onChange={(e) => handleChangeMember(e, 0)} />
+                                            <Input
+                                                value={currentMember[0].name}
+                                                onChange={(e) => handleChangeMember(e, 0)}
+                                                onKeyUp={e => {e.keyCode === 13 && register()}}
+                                            />
                                             <span className='separator'> - </span>
-                                            <Input value={currentMember[1].name} onChange={(e) => handleChangeMember(e, 1)} />
+                                            <Input
+                                                value={currentMember[1].name}
+                                                onChange={(e) => handleChangeMember(e, 1)}
+                                                onKeyUp={e => {e.keyCode === 13 && register()}}
+                                            />
                                         </>
                                     )
                                 }
@@ -330,6 +342,7 @@ const TournamentStatistic: FC<Props> = ({
                                     value={info.yearOfBirth || ''}
                                     name="yearOfBirth"
                                     onChange={onInfoChange}
+                                    onKeyUp={e => { e.keyCode === 13 && register() }}
                                 />
                             </div>
                         </div>
@@ -341,6 +354,7 @@ const TournamentStatistic: FC<Props> = ({
                                     type='number'
                                     name="phone"
                                     onChange={onInfoChange}
+                                    onKeyUp={e => { e.keyCode === 13 && register() }}
                                 />
                             </div>
                         </div>
@@ -373,6 +387,7 @@ const TournamentStatistic: FC<Props> = ({
                 </div>
                 <div className="bottom">
                     <ParticipantList
+                        hostName={tournament.hostName}
                         currentTab={currentTab}
                         setCurrentTab={(e) => setCurrentTab(e)}
                         handleUpdateRank={handleUpdateRank}

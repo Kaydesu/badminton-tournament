@@ -153,7 +153,9 @@ const TournamentRegistration: FC = () => {
 
         if (team.members.length === 0) {
             const teamIndex = temp.findIndex(item => item.name === teamName);
-            temp.splice(teamIndex, 1);
+            if(team.name !== tournament.hostName && team.name !== 'Tự do') {
+                temp.splice(teamIndex, 1);
+            }
             const newTournament = setCompeteTeam(temp);
             updateTournament(newTournament);
         } else {
@@ -162,28 +164,53 @@ const TournamentRegistration: FC = () => {
         }
     }
 
-    const updateRank = (name: string, teamName: string) => {
-        const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
-        const team = temp.find(item => item.name === teamName);
-        const member = team.members.find(item => item.name === name);
-        member.seeded = !member.seeded;
-        let totalSeeded = 0;
-        temp.map(team => {
-            team.members.map(member => {
-                if(member.seeded) {
-                    totalSeeded ++;
-                }
-            })
-        });
+    const updateRank = (name: string, teamName: string, prior: boolean) => {
+        if(!prior) {
+            const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
+            const team = temp.find(item => item.name === teamName);
+            const member = team.members.find(item => item.name === name);
+            member.seeded = !member.seeded;
+            let totalSeeded = 0;
+            temp.map(team => {
+                team.members.map(member => {
+                    if(member.seeded) {
+                        totalSeeded ++;
+                    }
+                })
+            });
+    
+            if(totalSeeded > 4) {
+                setToastVisible(true);
+                setToastContent(['Chỉ được đăng ký tối đa 4 hạt giống'], 'error');
+                return;
+            }
+    
+            const newTournament = setCompeteTeam(temp);
+            updateTournament(newTournament);
+        } else {
+            const temp = JSON.parse(JSON.stringify(getCompeteTeam())) as CompeteTeam[];
+            const team = temp.find(item => item.name === teamName);
+            const member = team.members.find(item => item.name === name);
+            member.prior = !member.prior;
+            let totalSeeded = 0;
+            temp.map(team => {
+                team.members.map(member => {
+                    if(member.prior) {
+                        totalSeeded ++;
+                    }
+                })
+            });
 
-        if(totalSeeded > 4) {
-            setToastVisible(true);
-            setToastContent(['Chỉ được đăng ký tối đa 4 hạt giống'], 'error');
-            return;
+            if(totalSeeded > 1) {
+                setToastVisible(true);
+                setToastContent(['Chủ nhà chỉ được 1 lượt ưu tiên'], 'error');
+                return;
+            }
+    
+            const newTournament = setCompeteTeam(temp);
+            updateTournament(newTournament);
+    
         }
-
-        const newTournament = setCompeteTeam(temp);
-        updateTournament(newTournament);
     }
 
     const updateTournament = (data: TournamentSchema) => {

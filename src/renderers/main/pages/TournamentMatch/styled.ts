@@ -34,7 +34,7 @@ export const TournamentLayout = styled.div`
             overflow: auto;
         }
         .control-panel {
-            flex-grow: auto;
+            flex-grow: 1;
             height: 100%;
             box-shadow: 1px 1px 4px rgb(0 0 0 / 30%);
         }
@@ -95,6 +95,7 @@ export const TreeContainer = styled.div`
 `
 
 export const NameContainer = styled.div`
+    z-index: 1;
     @media print {
         position: fixed;
         top: 2.5cm;
@@ -125,6 +126,19 @@ export const NameContainer = styled.div`
             color: #1d36e9;
             font-weight: 500;
             font-size: 18px;
+        }
+    }
+
+    .athlete-name {
+        position: absolute;
+        transform: translate(0, -100%);
+        min-width: 150px;
+        height: 30px;
+        display: flex;
+        align-items: flex-end;
+        padding-right: 5px;
+        &.drag-enter {
+            border: 1px dashed blue;
         }
     }
 `
@@ -168,6 +182,73 @@ export const Pagination = styled.div`
         cursor: pointer;
         &.toRight {
             transform: rotate(180deg);
+        }
+    }
+`
+
+export const Staging = styled.div<{disabled: boolean;}>`
+    .title {
+        color: #fff;
+        background: #515151;
+        display: flex;
+        align-items: center;
+        height: 46px;
+        padding: 0 10px;
+        font-size: 20px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        cursor: pointer;
+
+        .tambo-icon {
+            margin-right: 15px;
+        }
+    }
+`
+
+export const ControlPanel = styled.div`
+    width: 100%;
+    height: 100%;
+    padding: 40px 30px;
+`
+
+export const SeedTable = styled.div`
+    .table-header {
+        padding-bottom: 6px;
+        background-color: #F8F8F8;
+        border-bottom: 1px solid #4B4B4B;
+        text-align: center;
+        font-size: 16px;
+        margin-bottom: 15px
+    }
+
+    .seeded-list {
+        li {
+            padding: 0 10px;
+            height: 24px;
+            display: flex;
+            align-items:center;
+            justify-content: space-between;
+            &.selected {
+                text-decoration: underline;
+            }
+            &.done {
+                text-decoration: line-through;
+            }
+            &.priority {
+                cursor: move;
+            }
+            .tambo-icon {
+                font-size: 18px;
+                transform: rotate(90deg);
+            }
+        }
+    }
+
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        .tambo-button {
+            width: calc(50% - 7px);
         }
     }
 `

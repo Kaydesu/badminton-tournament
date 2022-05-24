@@ -31,6 +31,8 @@ class TournamentBracket {
         this._canvas.style.width = width + "px";
         this._canvas.style.height = height + "px";
         this._canvas.getContext("2d").scale(ratio, ratio);
+        this._slots = [];
+        this._levels = new Map();
 
         if (!document.getElementById(container).querySelector('canvas')) {
             document.getElementById(container).appendChild(this._canvas);
@@ -68,10 +70,10 @@ class TournamentBracket {
 
         //Create lower levels:
         let level = 1;
-        let id = 0;
         const firstLevelSlots = this._slots.length;
 
         for (let i = firstLevelSlots / 2; i >= 1; i /= 2) {
+            let id = 0;
             let arrayId = new Array(i).fill(0).map((_, i) => {
                 id += 1;
                 return id;
@@ -134,12 +136,33 @@ class TournamentBracket {
         }
         this._levels.forEach(level => {
             level.map((item) => {
+                item.slot.label = [matchId + 1];
                 matches.push({
                     id: matchId += 1,
                     position: item.slot.position(),
                 })
             })
         });
+        return matches;
+    }
+    /***
+     * @ballot - is the index of the first rounds, this._slots. Starting with 0
+     * @return - return all match id if this ballot go to the final
+     * Can only be called after generateMatchIds
+     */
+    findNextMatches(ballot: number) {
+        const roundZeroSlots = this._slots.length;
+        let level = 1;
+        const matches: number[] = [];
+        let currentSlot: Slot = null;
+
+        matches.push(this._slots[ballot].slot.child.label[0]);
+
+        for (let i = roundZeroSlots / 2; i > 1; i /= 2) {
+            currentSlot = this.getSlotByLabel(level, matches[matches.length - 1]).slot;
+            matches.push(currentSlot.child.label[0]);
+            level += 1;
+        }
 
         return matches;
     }
@@ -152,6 +175,7 @@ class TournamentBracket {
     render() {
         this.distributeVertical();
         this.distributeLevels();
+
         this._slots.map(slot => {
             this.drawNode(slot.slot);
         });
@@ -160,6 +184,10 @@ class TournamentBracket {
                 this.drawNode(item.slot);
             })
         })
+    }
+
+    private getSlotByLabel(level: number, label: number) {
+        return this._levels.get(level).find(item => item.slot.label[0] === label);
     }
 
     private distributeVertical() {
@@ -218,6 +246,7 @@ class Slot {
     private _position: { x: number; y: number };
     private _size: number;
     private _parents: Slot[];
+    private _child: Slot;
     public label: number[];
     public againts: number;
     private _top: number;
@@ -229,6 +258,7 @@ class Slot {
         this._size = size;
         this.label = [];
         this._parents = [];
+        this._child = null;
         this.isPlayOff = isPlayOff;
         this.position({ x, y });
     }
@@ -247,6 +277,16 @@ class Slot {
 
     set parents(slots: Slot[]) {
         this._parents = slots;
+        slots[0].child = this;
+        slots[1].child = this;
+    }
+
+    set child(slot: Slot) {
+        this._child = slot;
+    }
+
+    get child() {
+        return this._child;
     }
 
     get parents() {

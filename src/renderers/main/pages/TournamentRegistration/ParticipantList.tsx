@@ -3,6 +3,8 @@ import { TableStyle, TableTabs, TournamentListSummary } from './styled';
 import trashIcon from '../../../../assets/icons/trash.svg';
 import starIcon from '../../../../assets/icons/star.svg';
 import starGrey from '../../../../assets/icons/starGrey.svg';
+import ribbon from '../../../../assets/icons/ribbon.svg';
+import ribbonGray from '../../../../assets/icons/ribbon-gray.svg';
 
 import Icon from '@components/Icon';
 import { CompeteTeam } from '@data/Tournament';
@@ -30,12 +32,13 @@ const columns = [
 type Props = {
     competeTeams: CompeteTeam[];
     handleDelete: (name: string, team: string) => void;
-    handleUpdateRank: (memberName: string, teamName: string) => void;
+    handleUpdateRank: (memberName: string, teamName: string, prior: boolean) => void;
     currentTab: string;
     setCurrentTab: (e: string) => void;
+    hostName: string;
 }
 
-const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRank, currentTab, setCurrentTab }) => {
+const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRank, currentTab, setCurrentTab, hostName }) => {
     useEffect(() => {
         if (currentTab !== 'all') {
             const index = competeTeams.findIndex(team => team.name === currentTab);
@@ -53,6 +56,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
             yearOfBirth: string;
             created: number;
             seeded: boolean;
+            prior: boolean;
         }[] = [];
 
         competeTeams.map((team) => {
@@ -65,6 +69,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                         yearOfBirth: member.yearOfBirth,
                         created: member.created,
                         seeded: member.seeded,
+                        prior: Boolean(member.prior),
                     });
                 } else {
                     if (team.name === currentTab) {
@@ -75,6 +80,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                             yearOfBirth: member.yearOfBirth,
                             created: member.created,
                             seeded: member.seeded,
+                            prior: Boolean(member.prior),
                         });
                     }
                 }
@@ -82,6 +88,8 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
         });
 
         participants.sort((a, b) => a.created - b.created);
+
+        console.log(participants);
 
         return participants.map((member: any, index) => (
             <tr key={member.name + index}>
@@ -92,8 +100,17 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                                 col.dataIndex !== 'seeded' ? (
                                     <div>{member[col.dataIndex]}</div>
                                 ) : (
-                                    <div className='seed-rank' onClick={() => handleUpdateRank(member.name, member.team)}>
-                                        <Icon src={member['seeded'] ? starIcon : starGrey} />
+                                    <div className='seed-rank'>
+                                        <Icon
+                                            onClick={() => handleUpdateRank(member.name, member.team, false)}
+                                            src={member['seeded'] ? starIcon : starGrey} />
+                                        {
+                                            member.team === hostName &&
+                                            <Icon
+                                                onClick={() => handleUpdateRank(member.name, member.team, true)}
+                                                src={member['prior'] ? ribbon : ribbonGray}
+                                            />
+                                        }
                                     </div>
                                 )
                             }
@@ -110,7 +127,7 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                 </td>
             </tr>
         ))
-    }, [competeTeams, currentTab]);
+    }, [competeTeams, currentTab, hostName]);
 
     const tabs = useMemo(() => {
         return (
