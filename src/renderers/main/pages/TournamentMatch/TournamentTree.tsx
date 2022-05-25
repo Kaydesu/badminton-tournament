@@ -67,6 +67,8 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [matchBase64, setMatchBase64] = useState(null);
     const [currentPhase, setCurrentPhase] = useState<PHASE>(PHASE.SEEDING);
+    const participantsRef = useRef<Participant[]>([]);
+    const ballotsRef = useRef<Ballot[]>([]);
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [validBallots, setValidBallots] = useState<number[]>([]);
     const [currentAthlete, setCurrentAthlete] = useState<Participant>({
@@ -255,6 +257,15 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
         }, 500);
     }, [ballots, participants, validBallots]);
 
+    const getPhaseLabel = () => {
+        switch (currentPhase) {
+            case PHASE.SEEDING:
+                return 'Bóc thăm xếp hạt giống';
+            case PHASE.GROUPING:
+                return 'Bóc thăm theo đội';
+        }
+    }
+
     const matchLabel = useMemo(() => {
         const handleDragEnd = (e: React.DragEvent<HTMLDivElement>, ballot: Ballot) => {
             e.currentTarget.classList.remove('drag-enter');
@@ -337,12 +348,21 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
         </NameContainer>
     }, [ballots, matches, currentPhase, validBallots]);
 
-    const phaseOne = useMemo(() => {
-        const abstractList = participants.filter(item => item.seeded);
+    const generateContent = useMemo(() => {
+        let abstractList: Participant[] = [];
+        switch (currentPhase) {
+            case PHASE.SEEDING:
+                abstractList = participants.filter(item => item.seeded);
+                break;
+            case PHASE.GROUPING:
+                abstractList = [];
+                break;
+            default:
+                break;
+        }
+
         const allSeedRegistered = abstractList.filter(item => item.slot !== null).length === abstractList.length;
         const priorAthlete = participants.find(item => item.prior);
-
-        console.log(allSeedRegistered, priorAthlete?.slot);
 
         return abstractList.length > 0 && <SeedTable>
             <div className='table-header'>Vận động viên hạt giống</div>
@@ -357,24 +377,34 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                     })
                 }
             </ul>
-            <div className='table-header'>Vận động viên ưu tiên</div>
-            <ul className='seeded-list'>
-                <li
-                    className={getClassName(priorAthlete) + ' priority'}
-                    draggable={!priorAthlete.slot}
-                    onDragStart={(e) => {
-                        e.dataTransfer.setData('priorAthlete', JSON.stringify(priorAthlete));
-                    }}
-                >
-                    {priorAthlete.name}_{priorAthlete.team}
-                </li>
-            </ul>
+            {
+                priorAthlete && (
+                    <>
+                        <div className='table-header'>Vận động viên ưu tiên</div>
+                        <ul className='seeded-list'>
+                            <li
+                                className={getClassName(priorAthlete) + ' priority'}
+                                draggable={!priorAthlete.slot}
+                                onDragStart={(e) => {
+                                    e.dataTransfer.setData('priorAthlete', JSON.stringify(priorAthlete));
+                                }}
+                            >
+                                {priorAthlete.name}_{priorAthlete.team}
+                            </li>
+                        </ul>
+                    </>
+                )
+            }
             {
                 allSeedRegistered && Boolean(priorAthlete.slot) ?
                     <div className="actions">
                         <Button
                             buttonType='secondary'
-                            onClick={() => pickAthlete(abstractList)}
+                            onClick={() => {
+                                setCurrentPhase(PHASE.GROUPING);
+                                ballotsRef.current = JSON.parse(JSON.stringify(ballots));
+                                participantsRef.current = JSON.parse(JSON.stringify(participants));
+                            }}
                         >
                             Tiếp tục
                         </Button>
@@ -406,7 +436,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                     </div>
             }
         </SeedTable>
-    }, [participants, currentAthlete, pickAthleteDisabled])
+    }, [participants, currentAthlete, pickAthleteDisabled, currentPhase])
 
     return (
         <>
@@ -427,8 +457,8 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
             {
                 ready && ReactDOM.createPortal(
                     <ControlPanel>
-                        <StageComponent disabled title='Bóc thăm xếp hạt giống'>
-                            {phaseOne}
+                        <StageComponent disabled title={getPhaseLabel()}>
+                            {generateContent}
                         </StageComponent>
                     </ControlPanel>
                     ,
