@@ -98,17 +98,19 @@ export const NameContainer = styled.div`
     z-index: 1;
     @media print {
         position: fixed;
-        top: 2.5cm;
-        left: 5%;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         margin: auto;
-        transform-origin: top left;
-        transform: scale(0.9);
+        font-family: 'Nunito' !important;
 
-        .label {
+        .athlete-name {
             font-family: 'Nunito' !important;
-            background-color: #c8d3d5 !important;
+        }
+
+        .match-id.valid {
+            color: rgba(0, 0, 0, 0.85) !important;
         }
     }
 
@@ -139,6 +141,10 @@ export const NameContainer = styled.div`
         padding-right: 5px;
         &.drag-enter {
             border: 1px dashed blue;
+        }
+
+        &.active {
+            color: red;
         }
     }
 `

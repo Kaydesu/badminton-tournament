@@ -31,7 +31,7 @@ export const contentList = [
 export const paddingTop = 55;
 export const paddingLeft = 75;
 export const spacing = 35;
-export const size = 150;
+export const size = 200;
 
 export const formatNumber = (value: number) => {
     if(value < 10) {

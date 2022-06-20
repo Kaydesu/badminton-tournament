@@ -14,6 +14,7 @@ type Props = {
     participantsList: Participant[];
     start: number;
     ready: boolean;
+    teamList: string[];
 }
 
 enum PHASE {
@@ -42,6 +43,7 @@ type Ballot = {
     id: number;
     ballot: number;
     taken: string;
+    belongToTeam: string;
     isPlayoff: boolean;
     isValid: boolean;
     position: { x: number; y: number };
@@ -62,11 +64,11 @@ const StageComponent: FC<StageProps> = ({ children, title, disabled }) => {
 }
 
 
-const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
+const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList }) => {
     const [pickAthleteDisabled, setPickAthleteDisabled] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [matchBase64, setMatchBase64] = useState(null);
     const [currentPhase, setCurrentPhase] = useState<PHASE>(PHASE.SEEDING);
+    const [teamCounter, setTeamCounter] = useState(0);
     const participantsRef = useRef<Participant[]>([]);
     const ballotsRef = useRef<Ballot[]>([]);
     const [participants, setParticipants] = useState<Participant[]>([]);
@@ -85,6 +87,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
         id: number;
         position: { x: number; y: number };
     }[]>([]);
+    const [activeTaken, setActiveTaken] = useState('');
 
     useEffect(() => {
         TournamentBracket.initialize(
@@ -100,51 +103,17 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
             const total = participantsList.length;
             TournamentBracket.createLevels(total);
             TournamentBracket.render();
-            setBallots(TournamentBracket.generateBallots().map(item => ({ ...item, isValid: false, taken: null })));
+            const defaultBallots = TournamentBracket.generateBallots().map(item => ({ ...item, isValid: false, taken: null, belongToTeam: null }));
+            ballotsRef.current = JSON.parse(JSON.stringify(defaultBallots));
+            participantsRef.current = JSON.parse(JSON.stringify(participantsList));
+            setBallots(JSON.parse(JSON.stringify(defaultBallots)));
             setMatches(TournamentBracket.generateMatchIds(total));
         }
     }, [participantsList]);
 
     useEffect(() => {
         validateBallot();
-    }, [currentPhase, ballots]);
-
-    useEffect(() => {
-        if (start) {
-            // if (participantList.left.length > 0) {
-            //     const suffle = suffleList(participantList.left);
-            //     setLeftTreeResult(getNodePosition(leftTree.current, suffle));
-            // }
-            // if (participantList.right.length > 0) {
-            //     const suffle = suffleList(participantList.right);
-            //     setRightTreeResult(getNodePosition(rightTree.current, suffle));
-            // }
-            // setMatchBase64(null);
-            // matching().then(() => {
-            //     enableButtons();
-            //     const canvas = TournamentBracket.canvas;
-            //     const image = canvas.toDataURL("image/png");
-            //     setMatchBase64(image);
-            // })
-        }
-    }, [start]);
-
-    const matching = () => {
-
-    }
-
-    const onImageLoad = () => {
-    }
-
-    const getColorByName = (name: string, side: 1 | 2) => {
-
-    }
-
-    const phaseOneExcecute = () => {
-
-    }
-
-
+    }, [currentPhase, ballots, teamCounter]);
 
     const getClassName = useCallback((athlete: Participant) => {
         let className = '';
@@ -173,108 +142,126 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
     }, []);
 
 
-    const validateBallot = useCallback(() => {
+    const validateBallot = () => {
         if (currentPhase === PHASE.SEEDING) {
-            let priors = ballots.filter(item => !item.isPlayoff).map(item => item.ballot);
-            let totalPrior = priors.length;
-            let totalTaken = ballots.filter(item => item.taken !== null).length;
-            if (totalTaken < totalPrior) {
-                // If the number of slots taken is lower than totalPrior slots
-                let newValidBallots = ballots.filter(item => !item.isPlayoff && !item.taken).map(item => item.ballot);
+            setValidBallots([]);            
+        } else if (currentPhase === PHASE.GROUPING) {
+            const takenSlots = ballots.filter(item => item.belongToTeam === teamList[teamCounter]);
+            if (takenSlots.length === 0) {
+                let newValidBallots = ballots.filter(item => !Boolean(item.taken)).map(item => item.id);
                 setValidBallots(newValidBallots);
-            } else if (totalTaken === totalPrior) {
-                // If all the prior slots are already taken
-                // Find the maximum match number before meet an already taken slot
-                let maximum = 0;
-
-                let distances = ballots.map(item => {
-                    let matches: number[] = [];
-                    priors.map(priorSlot => {
-                        matches.push(
-                            matchBeforeOppose(
-                                TournamentBracket.findNextMatches(item.ballot - 1),
-                                TournamentBracket.findNextMatches(priorSlot - 1)
-                            )
-                        )
-                    });
-                    const sum = matches.reduce((a, b) => a + b, 0);
-                    const avg = (sum / matches.length) || 0;
-                    if (avg >= maximum) {
-                        maximum = avg;
-                    }
-                    return avg;
-                });
-
-                let newValidBallots = ballots.filter((_, index) => distances[index] >= maximum).map(item => item.ballot);
-                setValidBallots(newValidBallots);
-            } else {
-                setValidBallots([]);
+                return;
             }
-        }
-    }, [currentPhase, ballots]);
+            let maximum = 0;
+            let distances = ballots.map(item => {
+                let matches: number[] = [];
+                takenSlots.map(taken => {
+                    matches.push(
+                        matchBeforeOppose(
+                            TournamentBracket.findNextMatches(item.ballot - 1),
+                            TournamentBracket.findNextMatches(taken.ballot - 1)
+                        )
+                    )
+                });
+                const sum = matches.reduce((a, b) => a + b, 0);
+                const avg = (sum / matches.length) || 0;
+                if (avg >= maximum) {
+                    maximum = avg;
+                }
+                return avg;
+            });
 
-    const selectPosition = useCallback((athlete: Participant) => {
-        const validPosition = ballots.filter(item => validBallots.includes(item.ballot));
+            // Check for how many left?
+            const notTaken = ballots.filter((item) => !Boolean(item.taken)).map(item => item.id);
+            console.log(notTaken);
+            if (notTaken.length !== 1) {
+                let newValidBallots = ballots.filter((_, index) => distances[index] >= maximum)
+                    .filter((item) => !Boolean(item.taken))
+                    .map(item => item.id);
+                if (newValidBallots.length === 0) {
+                    console.log('>>>>>Cover the bug', notTaken);
+                    setValidBallots(notTaken);
+                } else {
+                    setValidBallots(newValidBallots);
+                }
+                return;
+            }
+            setValidBallots(notTaken);
+        }
+    }
+
+    const selectPosition = (athlete: Participant) => {
+        const validPosition = ballots.filter(item => validBallots.includes(item.id));
         let selected: Ballot = null;
         const interval = setInterval(() => {
             selected = validPosition[Math.floor(Math.random() * validPosition.length)];
-            const newBallots: Ballot[] = ballots.map(item => {
-                if (item.id === selected.id) {
-                    return {
-                        ...item,
-                        taken: athlete.name + `[${athlete.symbol || athlete.team}]`,
+            if (selected) {
+                const newBallots: Ballot[] = ballots.map(item => {
+                    if (item.id === selected.id) {
+                        return {
+                            ...item,
+                            taken: athlete.name + `[${athlete.symbol || athlete.team}]`,
+                            belongToTeam: athlete.team,
+                        }
+                    } else {
+                        return item;
                     }
-                } else {
-                    return item;
-                }
-            });
-            setBallots(newBallots);
+                });
+                setBallots(newBallots);
+            } else {
+                console.log('Its overrrrr!!!!', validBallots);
+            }
         }, 50);
 
         setTimeout(() => {
-            const newParticipants = participants.map(item => {
-                if (athlete.name === item.name) {
-                    return {
-                        ...item,
-                        slot: selected.id,
+            if (selected) {
+                const newParticipants = participants.map(item => {
+                    if (athlete.name === item.name) {
+                        return {
+                            ...item,
+                            slot: selected.id,
+                        }
+                    } else {
+                        return { ...item }
                     }
-                } else {
-                    return { ...item }
-                }
-            });
+                });
 
-            setParticipants(newParticipants);
-            setCurrentAthlete({
-                name: '',
-                team: '',
-                symbol: '',
-                created: 0,
-                prior: false,
-                seeded: false,
-                slot: null,
-            });
+                setParticipants(newParticipants);
+                setCurrentAthlete({
+                    name: '',
+                    team: '',
+                    symbol: '',
+                    created: 0,
+                    prior: false,
+                    seeded: false,
+                    slot: null,
+                });
+            }
             clearInterval(interval);
-        }, 500);
-    }, [ballots, participants, validBallots]);
+        }, 2000);
+    }
 
-    const getPhaseLabel = () => {
+    const getPhaseLabel = useCallback(() => {
         switch (currentPhase) {
             case PHASE.SEEDING:
                 return 'Bóc thăm xếp hạt giống';
             case PHASE.GROUPING:
                 return 'Bóc thăm theo đội';
+            case PHASE.FINISH:
+                return 'Kết thúc'
         }
-    }
+    }, [currentPhase]);
 
     const matchLabel = useMemo(() => {
         const handleDragEnd = (e: React.DragEvent<HTMLDivElement>, ballot: Ballot) => {
             e.currentTarget.classList.remove('drag-enter');
-            const priorAthlete = JSON.parse(e.dataTransfer.getData('priorAthlete')) as Participant;
+            const seeded = JSON.parse(e.dataTransfer.getData('seeded')) as Participant;
             const newBallots: Ballot[] = ballots.map(item => {
                 if (item.id === ballot.id) {
                     return {
                         ...item,
-                        taken: `${priorAthlete.name}_${priorAthlete.symbol || priorAthlete.team}`,
+                        taken: `${seeded.name}[${seeded.symbol || seeded.team}]`,
+                        belongToTeam: seeded.team
                     }
                 } else {
                     return item;
@@ -283,7 +270,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
             setBallots(newBallots);
 
             const newParticipants = participants.map(item => {
-                if (priorAthlete.name === item.name) {
+                if (seeded.name === item.name) {
                     return {
                         ...item,
                         slot: ballot.id,
@@ -296,6 +283,13 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
             setParticipants(newParticipants);
         }
 
+        const getTakenTeam = (name: string) => {
+            if (!name) {
+                return '';
+            }
+            return name.split('[')[1].replace(']', '')
+        }
+
         return <NameContainer>
             {
                 ballots.map(item => (
@@ -305,7 +299,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                             top: item.position.y + paddingTop,
                         }}
                         // className='match-id'
-                        className={`match-id ${validBallots.includes(item.ballot) ? 'valid' : ''}`}
+                        className={`match-id ${validBallots.includes(item.id) ? 'valid' : ''}`}
                         key={item.id}
                     >
                         {item.id}
@@ -327,18 +321,45 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                 ))
             }
             {
-
-                ballots.map((item) => (
+                ballots.length > 0 && ballots.map((item) => currentPhase === PHASE.SEEDING ? (
                     <div
                         onDrop={(e) => handleDragEnd(e, item)}
                         onDragOver={(e) => e.preventDefault()}
                         onDragEnter={(e) => e.currentTarget.classList.add('drag-enter')}
                         onDragLeave={(e) => e.currentTarget.classList.remove('drag-enter')}
+                        // onMouseEnter={(e) => {
+                        //     e.preventDefault();
+                        //     setActiveTaken(`${getTakenTeam(item.taken)}`)
+                        // }}
+                        // onMouseLeave={(e) => {
+                        //     e.preventDefault();
+                        //     setActiveTaken('');
+                        // }}
                         style={{
                             left: item.position.x + paddingLeft,
                             top: item.position.y + paddingTop,
                         }}
+                        // className={`athlete-name${activeTaken === getTakenTeam(item.taken) ? 'active' : ''}`}
                         className="athlete-name"
+                        key={item.id + "-" + "name"}
+                    >
+                        {item.taken}
+                    </div>
+                ) : (
+                    <div
+                        onMouseEnter={(e) => {
+                            e.preventDefault();
+                            setActiveTaken(`${getTakenTeam(item.taken)}`)
+                        }}
+                        onMouseLeave={(e) => {
+                            e.preventDefault();
+                            setActiveTaken('');
+                        }}
+                        style={{
+                            left: item.position.x + paddingLeft,
+                            top: item.position.y + paddingTop,
+                        }}
+                        className={`athlete-name ${activeTaken === getTakenTeam(item.taken) ? 'active' : ''}`}
                         key={item.id + "-" + "name"}
                     >
                         {item.taken}
@@ -346,30 +367,60 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                 ))
             }
         </NameContainer>
-    }, [ballots, matches, currentPhase, validBallots]);
+    }, [ballots, matches, currentPhase, validBallots, activeTaken]);
 
     const generateContent = useMemo(() => {
+
+        const next = () => {
+            if (currentPhase === PHASE.SEEDING) {
+                setCurrentPhase(PHASE.GROUPING);
+                ballotsRef.current = JSON.parse(JSON.stringify(ballots));
+                participantsRef.current = JSON.parse(JSON.stringify(participants));
+            } else if (currentPhase === PHASE.GROUPING) {
+                ballotsRef.current = JSON.parse(JSON.stringify(ballots));
+                participantsRef.current = JSON.parse(JSON.stringify(participants));
+                if (teamCounter < teamList.length - 1) {
+                    setTeamCounter(prev => prev + 1);
+                } else {
+                    setCurrentPhase(PHASE.FINISH);
+                }
+            }
+        }
+
+        const redo = () => {
+            setParticipants(participantsRef.current);
+            setBallots(ballotsRef.current);
+        }
+
         let abstractList: Participant[] = [];
         switch (currentPhase) {
             case PHASE.SEEDING:
                 abstractList = participants.filter(item => item.seeded);
                 break;
             case PHASE.GROUPING:
-                abstractList = [];
+                abstractList = participants.filter(item => item.team === teamList[teamCounter]);
                 break;
             default:
                 break;
         }
 
-        const allSeedRegistered = abstractList.filter(item => item.slot !== null).length === abstractList.length;
-        const priorAthlete = participants.find(item => item.prior);
+        const allRegistered = abstractList.filter(item => item.slot !== null).length === abstractList.length;
 
-        return abstractList.length > 0 && <SeedTable>
-            <div className='table-header'>Vận động viên hạt giống</div>
+        return abstractList.length > 0 ? (<SeedTable>
+            <div className='table-header'>
+                {currentPhase === PHASE.SEEDING ? 'Vận động viên hạt giống' : `Đội ${teamList[teamCounter]}`}
+            </div>
             <ul className='seeded-list'>
                 {
                     abstractList.map(item => {
-                        return <li className={getClassName(item)} key={item.name}>
+                        return <li
+                            className={getClassName(item) + ' priority'}
+                            key={item.name + '-athlete'}
+                            draggable={!item.slot}
+                            onDragStart={(e) => {
+                                e.dataTransfer.setData('seeded', JSON.stringify(item));
+                            }}
+                        >
                             {item.name} _ {item.team}
                             {item.name === currentAthlete.name && <Icon src={caret} />}
                         </li>
@@ -378,42 +429,17 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                 }
             </ul>
             {
-                priorAthlete && (
-                    <>
-                        <div className='table-header'>Vận động viên ưu tiên</div>
-                        <ul className='seeded-list'>
-                            <li
-                                className={getClassName(priorAthlete) + ' priority'}
-                                draggable={!priorAthlete.slot}
-                                onDragStart={(e) => {
-                                    e.dataTransfer.setData('priorAthlete', JSON.stringify(priorAthlete));
-                                }}
-                            >
-                                {priorAthlete.name}_{priorAthlete.team}
-                            </li>
-                        </ul>
-                    </>
-                )
-            }
-            {
-                allSeedRegistered && Boolean(priorAthlete.slot) ?
+                allRegistered  ?
                     <div className="actions">
                         <Button
                             buttonType='secondary'
-                            onClick={() => {
-                                setCurrentPhase(PHASE.GROUPING);
-                                ballotsRef.current = JSON.parse(JSON.stringify(ballots));
-                                participantsRef.current = JSON.parse(JSON.stringify(participants));
-                            }}
+                            onClick={next}
                         >
                             Tiếp tục
                         </Button>
                         <Button
                             buttonType='secondary'
-                            onClick={() => {
-                                setParticipants(participantsList);
-                                setBallots(TournamentBracket.generateBallots().map(item => ({ ...item, isValid: false, taken: null })));
-                            }}
+                            onClick={redo}
                         >
                             Làm lại
                         </Button>
@@ -421,7 +447,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                     <div className="actions">
                         <Button
                             buttonType='secondary'
-                            disabled={pickAthleteDisabled || allSeedRegistered}
+                            disabled={pickAthleteDisabled || allRegistered || currentPhase === PHASE.SEEDING}
                             onClick={() => pickAthlete(abstractList)}
                         >
                             Chọn VĐV
@@ -436,21 +462,14 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready }) => {
                     </div>
             }
         </SeedTable>
-    }, [participants, currentAthlete, pickAthleteDisabled, currentPhase])
+        ) : (
+            <div>Kết thúc</div>
+        )
+    }, [participants, currentAthlete, pickAthleteDisabled, currentPhase, teamCounter]);
 
     return (
         <>
             <TreeContainer ref={containerRef} id="tree-container">
-                {/* {
-                matchBase64 && (
-                    <ImageContainer>
-                        <img src={matchBase64} alt="lull" onLoad={onImageLoad} />
-                    </ImageContainer>
-                )
-            }
-            <NameContainer>
-           
-            </NameContainer> */}
                 {matchLabel}
             </TreeContainer>
 

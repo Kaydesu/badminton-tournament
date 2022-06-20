@@ -104,13 +104,6 @@ const ParticipantList: FC<Props> = ({ competeTeams, handleDelete, handleUpdateRa
                                         <Icon
                                             onClick={() => handleUpdateRank(member.name, member.team, false)}
                                             src={member['seeded'] ? starIcon : starGrey} />
-                                        {
-                                            member.team === hostName &&
-                                            <Icon
-                                                onClick={() => handleUpdateRank(member.name, member.team, true)}
-                                                src={member['prior'] ? ribbon : ribbonGray}
-                                            />
-                                        }
                                     </div>
                                 )
                             }

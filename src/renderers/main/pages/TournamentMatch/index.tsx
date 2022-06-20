@@ -84,9 +84,15 @@ const TournamentMatch = () => {
         }
     };
 
-    const participants = useMemo(() => {
+    const competition = useMemo<{
+        members: Participant[];
+        teamList: string[];
+    }>(() => {
         if (!tournament) {
-            return [];
+            return {
+                members: [],
+                teamList: [],
+            };
         }
         let competeTeams: CompeteTeam[];
         const content = location.state;
@@ -108,12 +114,17 @@ const TournamentMatch = () => {
                 competeTeams = JSON.parse(JSON.stringify(tournament.mixedDouble.teams));
                 break;
             default:
-                return [];
+                return {
+                    members: [],
+                    teamList: [],
+                };
         }
 
         const members: Participant[] = [];
+        const teamList: string[] = [];
 
         competeTeams.map((team) => {
+            teamList.push(team.name);
             team.members.map(member => {
                 members.push({
                     team: team.name,
@@ -127,8 +138,13 @@ const TournamentMatch = () => {
             })
         });
         members.sort((a, b) => a.created - b.created);
-        
-        return members;
+
+        teamList.push(teamList.splice(teamList.indexOf('Tự do'), 1)[0]);
+
+        return {
+            members,
+            teamList,
+        };
     }, [tournament, pagination.current]);
 
     return (
@@ -159,7 +175,12 @@ const TournamentMatch = () => {
                                     <h2 className='tournament-name'>{tournament.name} ({tournament.age}) - {contentText()}</h2>
                                     <div className="branch-number">Nhánh: 1</div>
                                 </div>
-                                <TournamentTree participantsList={participants} start={0} ready={ready} />
+                                <TournamentTree
+                                    teamList={competition.teamList}
+                                    participantsList={competition.members}
+                                    start={0}
+                                    ready={ready}
+                                />
                             </PrintedContent>
                         </div>
                         <div className="control-panel" id="control-panel"></div>
