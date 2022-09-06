@@ -18,6 +18,7 @@ const TournamentRegistration: FC = () => {
 
     useEffect(() => {
         getTournamentInfo();
+        localStorage.clear();
     }, []);
 
     const getTournamentInfo = () => {

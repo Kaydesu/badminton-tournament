@@ -2,7 +2,7 @@ import { IPCMainStream } from "@classes/IPCStream";
 import { AthleteSchema } from "@data/Athlete";
 import { TeamSchema } from "@data/Team";
 import { TournamentSchema } from "@data/Tournament";
-import { batchUpdate, deleteData, fetchAll, fetchBatch, fetchOne, saveData } from "@utils/helpers";
+import { batchUpdate, create, deleteData, fetchAll, fetchBatch, fetchOne, saveData } from "@utils/helpers";
 import { IPCResponse, TableNames } from "@utils/types";
 import { IpcMainEvent, IpcRenderer, IpcRendererEvent, WebContents } from "electron";
 
@@ -77,6 +77,7 @@ const setUpSaveStream = <T>(tableName: TableNames) => {
     }
 
     stream.listen(callback).then(data => {
+        console.log('saveeee dataaaa', data);
         data.sender.send(`${eventName}/response`, data.response);
         stream.unlisten(callback);
         setUpSaveStream(tableName);
@@ -112,6 +113,33 @@ const setUpSaveBatchStream = <T>(tableName: TableNames) => {
     })
 }
 
+const setUpCreateData = (tableName: TableNames) => {
+    const eventName = `create:${tableName}`;
+    const stream = new IPCMainStream<any[], IPCResponse<any[]>>(eventName);
+    const callback = (e: IpcMainEvent | IpcRendererEvent, data: any[]) => {
+        try {
+            create(tableName, data);
+            stream.response({
+                sender: e.sender,
+                response: {
+                    status: 'success',
+                    data,
+                },
+            })
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    stream.listen(callback).then(data => {
+        data.sender.send(`${eventName}/response`, data.response);
+        stream.unlisten(callback);
+        setUpCreateData(tableName);
+    }).catch(error => {
+        console.log(error);
+    })
+}
+
 const setUpDeleteStream = <T>(tableName: TableNames) => {
     const eventName = `delete:${tableName}`;
     const stream = new IPCMainStream<string, IPCResponse<T>>(eventName);
@@ -141,6 +169,8 @@ const setUpDeleteStream = <T>(tableName: TableNames) => {
 export const setUpFetchTeam = () => {
     setUpFetchStream<TeamSchema | TeamSchema[]>('TEAMS');
     setUpSaveStream<TeamSchema>('TEAMS');
+    setUpCreateData('MATCHES');
+    setUpFetchStream<any>('MATCHES');
     setUpFetchBatchStream<AthleteSchema>('TEAMS');
 
     setUpFetchStream<AthleteSchema | AthleteSchema[]>('ATHLETES');

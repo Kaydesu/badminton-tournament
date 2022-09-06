@@ -272,7 +272,7 @@ const TournamentStatistic: FC<Props> = ({
     }
 
     return (
-        <StatisticStyled className='tambo-scrollbar'>
+        <StatisticStyled>
             <div className='header'>
                 <button onClick={() => navigate('/')} >
                     <div className='redirect'>
@@ -287,7 +287,7 @@ const TournamentStatistic: FC<Props> = ({
                     </div>
                 </button>
             </div>
-            <StatisticLayout>
+            <StatisticLayout className='tambo-scrollbar'>
                 <div className="top">
                     <div className="registration">
                         <h2 className="section-title">Ghi danh</h2>

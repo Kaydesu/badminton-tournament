@@ -3,8 +3,6 @@ import { TableStyle, TableTabs, TournamentListSummary } from './styled';
 import trashIcon from '../../../../assets/icons/trash.svg';
 import starIcon from '../../../../assets/icons/star.svg';
 import starGrey from '../../../../assets/icons/starGrey.svg';
-import ribbon from '../../../../assets/icons/ribbon.svg';
-import ribbonGray from '../../../../assets/icons/ribbon-gray.svg';
 
 import Icon from '@components/Icon';
 import { CompeteTeam } from '@data/Tournament';

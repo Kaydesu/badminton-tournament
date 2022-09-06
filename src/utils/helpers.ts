@@ -54,6 +54,24 @@ export function saveData<D extends ModelSchema>(table: TableNames, data: D) {
     }
 }
 
+export function create(table: TableNames, data: any) {
+    try {
+        const list = JSON.parse(readJSON(table)) as any[];
+        const instance = list.find(item => item.id === data.id);
+        if (instance) {
+            console.log('===========', instance);
+            instance.result = data.result;
+            writeJSON(table, list);
+        } else {
+            list.push({ ...data })
+            writeJSON(table, list);
+        }
+    } catch (err) {
+        console.log('error', err);
+        throw new Error(err);
+    }
+}
+
 export function deleteData<D extends ModelSchema>(table: TableNames, id: string) {
     try {
         const data = JSON.parse(readJSON(table)) as D[];
@@ -86,19 +104,19 @@ export function batchUpdate<D extends ModelSchema>(
 
 
 
-const readJSON = (table: string) => {
+export const readJSON = (table: string) => {
     if (fs.existsSync(`${BASE_URL}/TABLE_${table}.json`)) {
         const res = fs.readFileSync(`${BASE_URL}/TABLE_${table}.json`);
         return JSON.parse(JSON.stringify(res.toString()));
     } else {
         fs.mkdir(BASE_URL, () => {
             writeJSON(table, []);
-        })
+        });
     }
 
 }
 
-const writeJSON = (table: string, json: any) => {
+export const writeJSON = (table: string, json: any) => {
     try {
         fs.writeFileSync(`${BASE_URL}/TABLE_${table}.json`, JSON.stringify(json));
     } catch (err) {

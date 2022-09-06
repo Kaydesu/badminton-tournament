@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom"
-import styled from "styled-components"
+import styled from "styled-components";
 
 export const TournamentSummaryLayout = styled.div`
     width: 70%;
@@ -20,21 +19,28 @@ export const TournamentTable = styled.table`
     margin-top: 20px;
     margin-bottom: 15px;
     width: 100%;
+    border-spacing: 0 12px;
+    border-collapse: separate;
     thead > tr > th {
         font-size: 16px;
         text-align: left;
         padding: 0 12px;
+        font-weight: 500;
     }
 
     tbody > tr {
-        background-color: #EBEFF0;
+        color: #fff;
         cursor: pointer;
+        background-color: #348dfe;
+        &:hover {
+            opacity: 0.85;
+        }
     }
 }
 `
 
 export const TournamentItem = styled.button`
-    height: 42px;
+    height: 36px;
     padding: 0 12px;
     cursor: pointer;
 `
@@ -54,11 +60,7 @@ export const EmptyView = styled.div`
     }
 
     .tambo-button {
-        width: 265px;
-        height: 90px;
-        font-size: 24px;
-        &:hover {
-            border-radius: 43px
-        }
+        padding: 12px 16px;
+        font-size: 18px;
     }
 `

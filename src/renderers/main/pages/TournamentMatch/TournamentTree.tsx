@@ -9,12 +9,18 @@ import chevron from '../../../../assets/icons/chevron-double-right.svg';
 import caret from '../../../../assets/icons/caret-down.svg';
 import Icon from '@components/Icon';
 import Button from '@components/Button';
+import { useAutoSave } from './useAutoSave';
 
 type Props = {
+    branchName: string;
     participantsList: Participant[];
     start: number;
     ready: boolean;
     teamList: string[];
+    resetResult: () => void;
+    previewResult: () => void;
+    printMatch: () => void;
+    saveResult: () => void;
 }
 
 enum PHASE {
@@ -64,15 +70,24 @@ const StageComponent: FC<StageProps> = ({ children, title, disabled }) => {
 }
 
 
-const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList }) => {
+const TournamentTree: FC<Props> = ({
+    branchName,
+    participantsList,
+    start,
+    ready,
+    teamList,
+    resetResult,
+    previewResult,
+    printMatch,
+    saveResult
+}) => {
     const [pickAthleteDisabled, setPickAthleteDisabled] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [currentPhase, setCurrentPhase] = useState<PHASE>(PHASE.SEEDING);
-    const [teamCounter, setTeamCounter] = useState(0);
-    const participantsRef = useRef<Participant[]>([]);
-    const ballotsRef = useRef<Ballot[]>([]);
-    const [participants, setParticipants] = useState<Participant[]>([]);
-    const [validBallots, setValidBallots] = useState<number[]>([]);
+    const [currentPhase, setCurrentPhase] = useAutoSave<PHASE>('currentPhase', branchName, PHASE.SEEDING);
+    const [teamCounter, setTeamCounter] = useAutoSave('teamCounter', branchName, 0);
+    const [participants, setParticipants] = useAutoSave<Participant[]>('participants', branchName, []);
+    const [validBallots, setValidBallots] = useAutoSave<number[]>('validBallots', branchName, []);
+    const [ballots, setBallots] = useAutoSave<Ballot[]>('ballots', branchName, []);
+
     const [currentAthlete, setCurrentAthlete] = useState<Participant>({
         name: '',
         team: '',
@@ -82,12 +97,15 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
         seeded: false,
         slot: null,
     });
-    const [ballots, setBallots] = useState<Ballot[]>([]);
     const [matches, setMatches] = useState<{
         id: number;
         position: { x: number; y: number };
     }[]>([]);
     const [activeTaken, setActiveTaken] = useState('');
+
+    const participantsRef = useRef<Participant[]>([]);
+    const ballotsRef = useRef<Ballot[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         TournamentBracket.initialize(
@@ -99,21 +117,41 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
 
     useEffect(() => {
         if (participantsList.length > 0) {
-            setParticipants(participantsList);
-            const total = participantsList.length;
-            TournamentBracket.createLevels(total);
-            TournamentBracket.render();
-            const defaultBallots = TournamentBracket.generateBallots().map(item => ({ ...item, isValid: false, taken: null, belongToTeam: null }));
-            ballotsRef.current = JSON.parse(JSON.stringify(defaultBallots));
-            participantsRef.current = JSON.parse(JSON.stringify(participantsList));
-            setBallots(JSON.parse(JSON.stringify(defaultBallots)));
-            setMatches(TournamentBracket.generateMatchIds(total));
+            initializeTree();
         }
     }, [participantsList]);
 
     useEffect(() => {
         validateBallot();
     }, [currentPhase, ballots, teamCounter]);
+
+    const initializeTree = () => {
+        if (participants.length === 0) {
+            setParticipants(participantsList);
+            participantsRef.current = JSON.parse(JSON.stringify(participantsList));
+        } else {
+            participantsRef.current = JSON.parse(JSON.stringify(participants));
+        }
+
+        const total = participantsList.length;
+        TournamentBracket.createLevels(total);
+        TournamentBracket.render();
+
+        if (ballots.length === 0) {
+            const defaultBallots = TournamentBracket.generateBallots().map(item => ({
+                ...item,
+                isValid: false,
+                taken: null,
+                belongToTeam: null
+            }));
+            ballotsRef.current = JSON.parse(JSON.stringify(defaultBallots));
+            setBallots(JSON.parse(JSON.stringify(defaultBallots)));
+        } else {
+            setBallots(JSON.parse(JSON.stringify(ballots)));
+        }
+        // Load from file or generate default
+        setMatches(TournamentBracket.generateMatchIds(total));
+    }
 
     const getClassName = useCallback((athlete: Participant) => {
         let className = '';
@@ -129,6 +167,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
 
     const pickAthlete = useCallback((list: Participant[]) => {
         setPickAthleteDisabled(true);
+        let pickedAthletes = list.filter(item => !item.slot);
         const interval = setInterval(() => {
             const filtered = list.filter(item => !item.slot);
             const randomAthlete = filtered[Math.floor(Math.random() * filtered.length)];
@@ -138,13 +177,13 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
         setTimeout(() => {
             setPickAthleteDisabled(false);
             clearInterval(interval);
-        }, 500);
+        }, pickedAthletes.length > 1 ? 500 : 50);
     }, []);
 
 
     const validateBallot = () => {
         if (currentPhase === PHASE.SEEDING) {
-            setValidBallots([]);            
+            setValidBallots([]);
         } else if (currentPhase === PHASE.GROUPING) {
             const takenSlots = ballots.filter(item => item.belongToTeam === teamList[teamCounter]);
             if (takenSlots.length === 0) {
@@ -173,13 +212,11 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
 
             // Check for how many left?
             const notTaken = ballots.filter((item) => !Boolean(item.taken)).map(item => item.id);
-            console.log(notTaken);
             if (notTaken.length !== 1) {
                 let newValidBallots = ballots.filter((_, index) => distances[index] >= maximum)
                     .filter((item) => !Boolean(item.taken))
                     .map(item => item.id);
                 if (newValidBallots.length === 0) {
-                    console.log('>>>>>Cover the bug', notTaken);
                     setValidBallots(notTaken);
                 } else {
                     setValidBallots(newValidBallots);
@@ -208,8 +245,6 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
                     }
                 });
                 setBallots(newBallots);
-            } else {
-                console.log('Its overrrrr!!!!', validBallots);
             }
         }, 50);
 
@@ -238,17 +273,17 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
                 });
             }
             clearInterval(interval);
-        }, 2000);
+        }, validPosition.length > 1 ? 2000 : 50);
     }
 
     const getPhaseLabel = useCallback(() => {
         switch (currentPhase) {
             case PHASE.SEEDING:
-                return 'Bóc thăm xếp hạt giống';
+                return '1. Bóc thăm xếp hạt giống';
             case PHASE.GROUPING:
-                return 'Bóc thăm theo đội';
+                return '2. Bóc thăm theo đội';
             case PHASE.FINISH:
-                return 'Kết thúc'
+                return '3. Kết thúc'
         }
     }, [currentPhase]);
 
@@ -380,7 +415,7 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
                 ballotsRef.current = JSON.parse(JSON.stringify(ballots));
                 participantsRef.current = JSON.parse(JSON.stringify(participants));
                 if (teamCounter < teamList.length - 1) {
-                    setTeamCounter(prev => prev + 1);
+                    setTeamCounter(teamCounter + 1);
                 } else {
                     setCurrentPhase(PHASE.FINISH);
                 }
@@ -422,14 +457,13 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
                             }}
                         >
                             {item.name} _ {item.team}
-                            {item.name === currentAthlete.name && <Icon src={caret} />}
                         </li>
 
                     })
                 }
             </ul>
             {
-                allRegistered  ?
+                allRegistered ?
                     <div className="actions">
                         <Button
                             buttonType='secondary'
@@ -463,7 +497,14 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
             }
         </SeedTable>
         ) : (
-            <div>Kết thúc</div>
+            <>
+                <Button className='result-button' onClick={previewResult}>
+                    Xem kết quả
+                </Button>
+                <Button className='result-button' onClick={printMatch}>
+                    In kết quả
+                </Button>
+            </>
         )
     }, [participants, currentAthlete, pickAthleteDisabled, currentPhase, teamCounter]);
 
@@ -479,6 +520,10 @@ const TournamentTree: FC<Props> = ({ participantsList, start, ready, teamList })
                         <StageComponent disabled title={getPhaseLabel()}>
                             {generateContent}
                         </StageComponent>
+                        <div className='setting-field'>
+                            <Button buttonType='main' onClick={saveResult}>Lưu kết quả</Button>
+                            <Button buttonType='main' onClick={resetResult}>Hủy kết quả</Button>
+                        </div>
                     </ControlPanel>
                     ,
                     document.getElementById('control-panel')

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { IPCMainEvents, IPCResponse, TableNames, WINDOW_NAME } from "@utils/types";
+import { readJSON, writeJSON } from "@utils/helpers";
 
 
 
@@ -49,6 +50,19 @@ export const api = {
         ipcRenderer.send(eventName, data);
         return new Promise((resolve, reject) => {
             ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<T>) => {
+                if (response.status === 'error') {
+                    reject();
+                } else {
+                    resolve(response.data);
+                }
+            })
+        });
+    },
+    create(table: TableNames, data: any): Promise<any> {
+        const eventName = `create:${table}`;
+        ipcRenderer.send(eventName, data);
+        return new Promise((resolve, reject) => {
+            ipcRenderer.on(`${eventName}/response`, (event, response: IPCResponse<any>) => {
                 if (response.status === 'error') {
                     reject();
                 } else {

@@ -10,10 +10,16 @@ export const InputStyle = styled.div`
     }
     .tambo-input__input {
         color: #4B4B4B;
-        background: #EBEFF0;
+        background: #fdfdfd;
         border-radius: 4px;
         padding: 10px 12px;
         width: 100%;
+        border: 1px solid #d9d9d9;
+        transition: border-color 0.3s;
+        &:hover, &:focus {
+            border: 1px solid #348dfe;
+        }
+
         ::placeholder {
             color: #7e8497;
             opacity: 0.7;

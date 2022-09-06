@@ -1,34 +1,37 @@
 import styled from "styled-components";
 
 export const TournamentLayout = styled.div`
+    position: relative;
+    height: 100%;
+
     .header {
+        height: 50px;
         display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 10px 25px;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        position: relative;
+        background: #fdfdfd;
+        box-shadow: 0 2px 8px #f0f1f2;
         .redirect {
-            display: flex;
-            align-items: center;
-        }
-
-        .action {
-            display: flex;
-            .tambo-button {
-                margin-left: 20px;
-                padding: 0;
-                height: 36px;
-                width: 145px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 10px;
+            font-size: 18px;
+            .tambo-icon {
+                margin: 0 10px;
             }
-
-            .tambo-button.disabled {
-                opacity: 0.4;
-                pointer-events: none;
+            div {
+                display: flex;
+                align-items: center;
             }
         }
     }
 
     .container {
-        height: calc(100vh - 56px);
+        height: calc(100% - 50px);
+        padding-top: 10px;
         display: flex;
         .tournament-bracket {
             overflow: auto;
@@ -46,7 +49,7 @@ export const PrintedContent = styled.div`
     width: 210mm;
     height: 296mm;
     margin: 0 5px 40px 25px;
-    border: 1px solid #000;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
 
@@ -125,7 +128,7 @@ export const NameContainer = styled.div`
         transform: translate(-120%, -50%);
         transition: all 0.3s ease-in;
         &.valid {
-            color: #1d36e9;
+            color: #348dfe;
             font-weight: 500;
             font-size: 18px;
         }
@@ -192,10 +195,9 @@ export const Pagination = styled.div`
     }
 `
 
-export const Staging = styled.div<{disabled: boolean;}>`
+export const Staging = styled.div<{ disabled: boolean; }>`
     .title {
-        color: #fff;
-        background: #515151;
+        background: #eef2f8;
         display: flex;
         align-items: center;
         height: 46px;
@@ -209,19 +211,36 @@ export const Staging = styled.div<{disabled: boolean;}>`
             margin-right: 15px;
         }
     }
+
+    .result-button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
 `
 
 export const ControlPanel = styled.div`
     width: 100%;
     height: 100%;
     padding: 40px 30px;
+    width: 100%;
+    background-color: #fdfdfd;
+
+    .setting-field {
+        margin-top: 20px;
+        padding-top: 5px;
+
+        .tambo-button {
+            display: block;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+    }
 `
 
 export const SeedTable = styled.div`
     .table-header {
-        padding-bottom: 6px;
-        background-color: #F8F8F8;
-        border-bottom: 1px solid #4B4B4B;
+        padding: 3px 0;
+        background-color: #bdd2ef;
         text-align: center;
         font-size: 16px;
         margin-bottom: 15px
@@ -235,7 +254,8 @@ export const SeedTable = styled.div`
             align-items:center;
             justify-content: space-between;
             &.selected {
-                text-decoration: underline;
+                background: #348dfe;
+                color: #fff;
             }
             &.done {
                 text-decoration: line-through;
@@ -256,5 +276,26 @@ export const SeedTable = styled.div`
         .tambo-button {
             width: calc(50% - 7px);
         }
+    }
+`
+
+export const PreviewSection = styled.div`
+    position: fixed;
+    inset: 0;
+    
+    z-index: 1;
+
+    .mask {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+    }
+
+    img {
+        position: absolute;
+        height: 98%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 `

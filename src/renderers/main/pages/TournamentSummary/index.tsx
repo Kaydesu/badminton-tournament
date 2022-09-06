@@ -4,7 +4,6 @@ import Button from '@components/Button';
 import { EmptyView, TournamentTable, TournamentItem, TournamentSummaryLayout } from './styled';
 import Icon from '@components/Icon';
 import addCircle from '../../../../assets/icons/add-circle.svg';
-import { TeamSchema } from '@data/Team';
 import { useNavigate } from 'react-router-dom';
 
 type Props = {
@@ -19,6 +18,10 @@ const TournamentSummaryPage: FC<Props> = ({ tournaments }) => {
     const navigate = useNavigate();
 
     const [tournamentInfo, setTournamentInfo] = useState<TournamentSummary[]>([]);
+
+    useEffect(() => {
+        localStorage.clear();
+    }, []);
 
     useEffect(() => {
         setTournamentInfo(tournaments.map((item) => ({

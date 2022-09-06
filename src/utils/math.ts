@@ -57,10 +57,10 @@ export const splitArray = (list: any[]) => {
     const secondHalf: any[] = [];
 
     list.map((item, index) => {
-        if (index < Math.ceil(list.length / 2)) {
-            firstHalf.push(item);
+        if (isOdd(index)) {
+            firstHalf.push({...item});
         } else {
-            secondHalf.push(item)
+            secondHalf.push({...item})
         }
     });
 

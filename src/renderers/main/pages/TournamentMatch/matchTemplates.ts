@@ -71,5 +71,4 @@ MATCH_TEMPLATES.set(31, [
     "playoff", "playoff", "playoff", "playoff", "playoff", "playoff", "playoff", "playoff"
 ]);
 
-
 export default MATCH_TEMPLATES;
