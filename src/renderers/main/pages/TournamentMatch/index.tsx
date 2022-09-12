@@ -211,14 +211,26 @@ const TournamentMatch = () => {
   }, [branches]);
 
   useEffect(() => {
-    resetResult();
-  }, [currentBranch]);
-
-  const resetResult = () => {
     setReady(false);
     setTimeout(() => {
       setReady(true);
     }, 100);
+  }, [currentBranch]);
+
+  const resetResult = () => {
+    fetch<any>("MATCHES")
+      .then((response) => {
+        remove('MATCHES', `${tournament.id}/${location.state}/${currentBranch}`).then(() => {
+          setToastVisible(true);
+          setToastContent(["Đã hủy kết quả"], "info");
+
+          localStorage.clear();
+          reload();
+        });
+      })
+      .catch((err) => { 
+        console.log("errrrr: ", err);
+      });
   };
 
   const previewResult = () => {

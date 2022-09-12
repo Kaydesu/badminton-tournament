@@ -171,6 +171,7 @@ export const setUpFetchTeam = () => {
     setUpSaveStream<TeamSchema>('TEAMS');
     setUpCreateData('MATCHES');
     setUpFetchStream<any>('MATCHES');
+    setUpDeleteStream('MATCHES');
     setUpFetchBatchStream<AthleteSchema>('TEAMS');
 
     setUpFetchStream<AthleteSchema | AthleteSchema[]>('ATHLETES');

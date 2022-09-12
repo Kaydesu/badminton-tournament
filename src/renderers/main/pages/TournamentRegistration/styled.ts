@@ -185,7 +185,8 @@ export const TableTabs = styled.div`
   .tab-item {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 0 12px;
     cursor: pointer;
     width: 142px;
     height: 40px;

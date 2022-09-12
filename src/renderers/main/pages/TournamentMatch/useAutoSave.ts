@@ -20,7 +20,6 @@ export function useAutoSave<T>(key: string, location: string, initialState: T) {
 
     const setSaveState = (newState: T) => {
         const savedData = JSON.parse(localStorage.getItem(location));
-        console.log(key, newState);
         savedData[key] = newState;
         localStorage.setItem(location, JSON.stringify(savedData));
         setState(newState);

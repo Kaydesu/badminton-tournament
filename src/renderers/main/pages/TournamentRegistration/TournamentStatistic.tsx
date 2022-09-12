@@ -152,6 +152,7 @@ const TournamentStatistic: FC<Props> = ({
         }
 
         if (team) {
+            // Don't allow same name:
             const memberIndex = team.members.findIndex(member => member.name === newMember.name);
             if (memberIndex > -1) {
                 setToastVisible(true);
